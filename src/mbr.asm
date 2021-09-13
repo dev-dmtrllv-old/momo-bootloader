@@ -71,6 +71,6 @@ drive_ext_err_msg:		db "Drive extension not available!", 0
 
 %include "lib/common.asm"
 %include "lib/screen.asm"
-%include "lib/disk.asm"
+%include "lib/early_disk.asm"
 
 

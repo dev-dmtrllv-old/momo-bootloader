@@ -65,7 +65,7 @@ read_err:
 
 %include "lib/common.asm"
 %include "lib/screen.asm"
-%include "lib/disk.asm"
+%include "lib/early_disk.asm"
 
 read_err_msg: 	db "Disk error!", 0
 

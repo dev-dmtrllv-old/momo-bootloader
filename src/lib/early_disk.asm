@@ -14,8 +14,6 @@ check_drive_ext:
 		stc
 		ret
 
-
-
 read_sectors:
 	pusha
 	mov ax, 0x4200
@@ -26,6 +24,7 @@ read_sectors:
 	int 0x13
 	popa
 	ret
+
 
 dap:
 dap_size: 		db 0x10
