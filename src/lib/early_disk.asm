@@ -24,13 +24,3 @@ read_sectors:
 	int 0x13
 	popa
 	ret
-
-
-dap:
-dap_size: 		db 0x10
-dap_reserved:	db 0x0
-dap_sectors:	dw 0x1
-dap_buf_off:	dw 0x0
-dap_buf_seg:	dw 0x0
-dap_lba:		dd 0x0
-				dd 0x0
