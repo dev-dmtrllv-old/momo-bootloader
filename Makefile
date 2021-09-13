@@ -33,7 +33,7 @@ FS2_MOUNT_POINT = part2
 # END Mount options
 
 QEMU = qemu-system-i386
-QEMU_FLAGS = -M pc -drive format=raw,file=$(DISK_IMG) -no-reboot -no-shutdown -m 512M
+QEMU_FLAGS = -M pc -drive format=raw,file=$(DISK_IMG) -no-reboot -m 512M
 
 DISK_IMG = out/disk.img
 
