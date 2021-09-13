@@ -1,0 +1,4 @@
+halt:
+	cli
+	hlt
+	jmp $
