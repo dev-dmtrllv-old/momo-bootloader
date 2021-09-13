@@ -42,6 +42,13 @@ enter_unreal_mode:
 	pop ds
 	sti
 
+	xor eax, eax								; get the memory map from the bios
+	mov es, eax
+	mov di, boot_info_mem_map
+	call get_mem_list
+	jc get_mem_list_err
+	mov word [boot_info_mem_map_size], bp		; store the number of list items
+
 	jmp halt
 
 	jmp wait_shutdown
@@ -50,14 +57,17 @@ enter_unreal_mode:
 
 
 error_handler a20_failed, a20_fail_msg
+error_handler get_mem_list_err, mem_list_err_msg
 
 %include "lib/common.asm"
 %include "lib/screen.asm"
 %include "lib/disk.asm"
 %include "lib/a20.asm"
+%include "lib/mem.asm"
 
 load_msg: 			db "Loading bootloader core...", 0
 a20_fail_msg:		db "Failed to enable the A20 line!", 0
+mem_list_err_msg:	db "Failed to get the memory list!", 0
 
 gdtinfo:
 	dw gdt_end - gdt_desc - 1				; last byte in table
@@ -78,3 +88,7 @@ flat_desc:
 	db 0
 
 gdt_end:
+
+boot_info:
+boot_info_mem_map_size:	dw 0
+boot_info_mem_map: 		db 0
