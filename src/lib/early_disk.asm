@@ -24,3 +24,5 @@ read_sectors:
 	int 0x13
 	popa
 	ret
+
+%include "lib/dap.asm"
