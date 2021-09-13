@@ -51,17 +51,16 @@ boot_resume:
 	
 	add ax, 2
 	mov dword [dap_lba], eax
-	mov word [dap_buf_off], 0x7E00
+	mov word [dap_buf_off], BOOT2_ADDR
 	call read_sectors
 	jc read_err
 
-	jmp 0x7E00
+	jmp BOOT2_ADDR
 
 read_err:
 	mov si, read_err_msg
 	call print_line
-
-	jmp halt
+	jmp wait_shutdown
 
 %include "lib/common.asm"
 %include "lib/screen.asm"
