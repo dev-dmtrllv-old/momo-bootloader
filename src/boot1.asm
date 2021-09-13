@@ -44,17 +44,19 @@ times 20 db 0
 
 boot_resume:
 	mov [bpb_drive], dl						; store the booted drive number	
+	push eax								; push the file systems LBA
 
 	mov cx, [reserved_sectors]				; load reserved sectors - 2 after the boot file system
 	sub cx, 2
 	mov word [dap_sectors], cx
-	
+
 	add ax, 2
 	mov dword [dap_lba], eax
 	mov word [dap_buf_off], BOOT2_ADDR
 	call read_sectors
 	jc read_err
 
+	pop eax
 	jmp BOOT2_ADDR
 
 read_err:
@@ -64,7 +66,7 @@ read_err:
 
 %include "lib/common.asm"
 %include "lib/screen.asm"
-%include "lib/early_disk.asm"
+%include "lib/disk.asm"
 
 read_err_msg: 	db "Disk error!", 0
 

@@ -11,6 +11,9 @@
 [bits 16]
 
 boot_start:
+	mov [fs_lba], eax
+	call clear_screen
+	
 	call check_a20
 	cmp eax, 0
 	jne a20_enabled
@@ -70,6 +73,11 @@ enter_unreal_mode:
 	call mm_set_reserved
 	jc mm_set_reserved_err
 
+	mov eax, [fs_lba]							; initialize the FAT32 driver
+	xor ebx, ebx
+	mov bl, [bpb_drive]
+	call fat32_init
+
 	jmp halt
 
 	jmp wait_shutdown
@@ -87,6 +95,7 @@ error_handler mm_set_reserved_err, set_reserved_err_msg
 %include "lib/a20.asm"
 %include "lib/mem.asm"
 %include "lib/mm.asm"
+%include "lib/fat32.asm"
 
 load_msg: 				db "Loading bootloader core...", 0
 a20_fail_msg:			db "Failed to enable the A20 line!", 0
@@ -111,6 +120,8 @@ flat_desc:
 	db 0
 
 gdt_end:
+
+fs_lba: dd 0
 
 boot_info:
 boot_info_mem_map_size:	dw 0
