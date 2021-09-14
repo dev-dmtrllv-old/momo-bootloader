@@ -22,8 +22,6 @@ boot_start:
 	jne a20_failed
 
 a20_enabled:
-	mov si, load_msg
-	call print_line
 
 enter_unreal_mode:
 	cli
@@ -73,18 +71,41 @@ enter_unreal_mode:
 	call mm_set_reserved
 	jc mm_set_reserved_err
 
+
 	mov eax, [fs_lba]							; initialize the FAT32 driver
 	xor ebx, ebx
 	mov bl, [bpb_drive]
 	call fat32_init
 
-	jmp halt
+	mov si, load_msg
+	call print_line
+
+	mov si, core_path
+	call fat32_load_file
+	jc file_not_found
+	
+	mov cx, 0
+	mov esi, eax
+	mov edi, 0x10000
+	.copy_core:
+		mov eax, [esi]
+		mov [edi], eax 
+		inc esi
+		inc edi
+		dec bx
+		cmp bx, 0
+		jne .copy_core
+	
+	mov si, config_path
+	call fat32_load_file
+	jc file_not_found
 
 	jmp wait_shutdown
 
 
 
 
+error_handler file_not_found, file_not_found_msg
 error_handler a20_failed, a20_fail_msg
 error_handler get_mem_list_err, mem_list_err_msg
 error_handler mm_set_reserved_err, set_reserved_err_msg
@@ -96,11 +117,17 @@ error_handler mm_set_reserved_err, set_reserved_err_msg
 %include "lib/mem.asm"
 %include "lib/mm.asm"
 %include "lib/fat32.asm"
+%include "lib/path.asm"
 
 load_msg: 				db "Loading bootloader core...", 0
 a20_fail_msg:			db "Failed to enable the A20 line!", 0
 mem_list_err_msg:		db "Failed to get the memory list!", 0
 set_reserved_err_msg:	db "Failed to set memory block as reserved!", 0
+file_not_found_msg:		db "File not found!", 0
+
+config_path:			db "/momo/boot.cfg", 0
+core_path:				db "/momo/core.bin", 0
+
 gdtinfo:
 	dw gdt_end - gdt_desc - 1				; last byte in table
 	dd gdt_desc								; start of table
