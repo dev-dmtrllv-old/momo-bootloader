@@ -5,6 +5,8 @@
 %define PT_TABLE 						(MBR_ADDR + 0x1BE)
 %define PT_ENTRY_SIZE					0x10
 
+%define EOC								0x0FFFFFF8
+
 %ifndef MBR
 %define bpb_oem_label					0x7C03
 %define bpb_bytes_per_sector 	    	0x7C0B
