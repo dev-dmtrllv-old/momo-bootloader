@@ -42,9 +42,9 @@ all: $(ASM_OBJ) out/core.bin
 out/core.bin: $(CPP_OBJ)
 	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $^
 
-out/%.o: src/%.asm
+out/%.o: src/%.asm $(ASM_SRCS) $(ASM_INCLUDE_FILES)
 	@mkdir -p $(@D)
-	nasm -f bin $^ -isrc -o $@ $(NASM_DEFINES)
+	nasm -f bin $< -isrc -o $@ $(NASM_DEFINES)
 
 out/%.o: src/%.cpp
 	@mkdir -p $(@D)
@@ -73,7 +73,9 @@ write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin
 	sudo dd bs=1 if=out/boot1.o count=3 of=$(LOOP_DEV1) conv=notrunc
 	sudo dd bs=1 skip=$(BOOT_OFFSET) if=out/boot1.o iflag=skip_bytes of=$(LOOP_DEV1) seek=$(BOOT_OFFSET) conv=notrunc
 	sudo dd bs=1 seek=1024 if=out/boot2.o iflag=skip_bytes of=$(LOOP_DEV1) conv=notrunc
-	sudo cp test-config.cfg $(FS1_MOUNT_POINT)/boot.cfg
+	sudo mkdir $(FS1_MOUNT_POINT)/momo || true
+	sudo cp test-config.cfg $(FS1_MOUNT_POINT)/momo/boot.cfg
+	sudo cp out/core.bin $(FS1_MOUNT_POINT)/momo/core.bin
 	make unmount
 
 mount:
@@ -99,3 +101,4 @@ run:
 clear:
 	rm -rf out
 	rm -rf $(DISK_IMG)
+	rm -rf *.mem
