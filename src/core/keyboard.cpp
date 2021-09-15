@@ -6,10 +6,13 @@ namespace Keyboard
 	char getChar()
 	{
 		int c;
-		asm volatile("xor %%eax, %%eax;\n\tint $0x16;\n\tmov %%eax, %0"
-					 : "=r"(c)
-					 :
-					 : "eax");
+		asm volatile(
+			"xor %%eax, %%eax;\n\t"
+			"int $0x16;\n\t"
+			"mov %%eax, %0"
+			: "=r"(c)
+			:
+			: "eax");
 		return static_cast<char>(c & 0xFF);
 	}
 
