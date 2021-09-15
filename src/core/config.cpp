@@ -1,6 +1,7 @@
 #include "core/config.hpp"
 #include "core/types.hpp"
 #include "core/vga.hpp"
+#include "core/ascii.hpp"
 
 namespace Config
 {
@@ -13,8 +14,6 @@ namespace Config
 
 	uint32_t entryCount() { return entryCount_; }
 	Entry* entries() { return entries_; }
-
-	inline bool isAlphaNumeric(char c) { return (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122); }
 
 	void parse(const char *str)
 	{
@@ -46,7 +45,7 @@ namespace Config
 				if(c == ']')
 					break;
 
-				if (isAlphaNumeric(c))
+				if (Ascii::isAlphaNumeric(c))
 				{
 					entries_[entryCount_].name = str;
 					entries_[entryCount_].nameSize = 0;
@@ -54,7 +53,7 @@ namespace Config
 					while (*str != '\0') // search for end of the key
 					{
 						const char cc = *str;
-						if (!isAlphaNumeric(cc))
+						if (!Ascii::isAlphaNumeric(cc))
 							break;
 						entries_[entryCount_].nameSize++;
 						str++;
