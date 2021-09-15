@@ -86,7 +86,7 @@ enter_unreal_mode:
 	
 	mov cx, 0
 	mov esi, eax
-	mov edi, 0x10000
+	mov edi, 0x5000
 	.copy_core:
 		mov eax, [esi]
 		mov [edi], eax 
@@ -99,9 +99,12 @@ enter_unreal_mode:
 	mov si, config_path
 	call fat32_load_file
 	jc file_not_found
+	mov [boot_info_config_addr], eax
+	mov [boot_info_config_size], ebx
 
-	jmp wait_shutdown
-
+	mov eax, 0x5000 - 4
+	mov dword [eax], boot_info
+	jmp 0x5000
 
 
 
@@ -151,5 +154,7 @@ gdt_end:
 fs_lba: dd 0
 
 boot_info:
+boot_info_config_addr:	dd 0
+boot_info_config_size:	dd 0
 boot_info_mem_map_size:	dw 0
 boot_info_mem_map: 		db 0

@@ -2,14 +2,16 @@ OUT_DIR = out
 INCL_DIR = include
 
 CPP_SRCS = $(wildcard src/core/*.cpp)
+ASM_CORE_SRCS = $(wildcard src/core/*.asm)
 CPP_HEADERS = $(wildcard include/core/*.hpp)
 CPP_OBJ = $(patsubst src/%.cpp,$(OUT_DIR)/%.o,$(CPP_SRCS))
+ASM_CORE_OBJ = $(patsubst src/core/%.asm,$(OUT_DIR)/core/%_asm.o,$(ASM_CORE_SRCS))
 
 OPTIMIZATION = -O2
 
 TARGET = i686
 
-C_FLAGS = -ffreestanding $(OPTIMIZATION) -Wall -Wextra -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
+C_FLAGS = -ffreestanding $(OPTIMIZATION) -m16 -Wall -Wextra -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
 OBJCPY = $(TARGET)-elf-objcopy
 LD_FLAGS = -fno-common -ffreestanding -nostdlib -lgcc $(OPTIMIZATION)
@@ -39,8 +41,13 @@ DISK_IMG = out/disk.img
 
 all: $(ASM_OBJ) out/core.bin
 
-out/core.bin: $(CPP_OBJ)
+out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ)
 	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $^
+
+
+out/core/%_asm.o: src/core/%.asm
+	@mkdir -p $(@D)
+	nasm -f elf32 $< -o $@
 
 out/%.o: src/%.asm $(ASM_SRCS) $(ASM_INCLUDE_FILES)
 	@mkdir -p $(@D)

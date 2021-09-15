@@ -3,12 +3,13 @@ OUTPUT_ARCH(i386)
 ENTRY(main)
 SECTIONS
 {
-	. = 0x10000;
+	. = 0x5000;
  
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		code = .;
 		text = .;
+		*(.text.startup);
 		*(.text);
 	}
 
