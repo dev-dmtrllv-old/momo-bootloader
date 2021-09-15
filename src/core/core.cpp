@@ -6,6 +6,7 @@
 
 struct BootInfo
 {
+	uint32_t coreBinarySize;
 	char *config;
 	uint32_t configSize;
 	uint32_t memMapSize;
@@ -28,7 +29,9 @@ void main()
 	// utoa((uint32_t)bootInfo->memMap, b, 16);
 	// print(b);
 
-	mm::init(bootInfo->memMap, bootInfo->memMapSize);
+	// VGA::init();
+
+	mm::init(bootInfo->memMap, bootInfo->memMapSize, bootInfo->coreBinarySize);
 
 	// Config::parse(bootInfo->config);
 
