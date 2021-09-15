@@ -22,12 +22,20 @@ boot_start:
 	jne a20_failed
 
 a20_enabled:
+	; copy the gdt to GDT_ADDR
+	mov ecx, gdt_end
+	mov ebx, gdtinfo
+	sub ecx, ebx
+
+	mov si, gdtinfo							; from
+	mov di, GDT_ADDR						; to
+	rep movsb
 
 enter_unreal_mode:
 	cli
 	push ds
 
-	lgdt [gdtinfo]
+	lgdt [GDT_ADDR]
 
 	mov  eax, cr0								; switch to pmode by
    	or al, 1									; set pmode bit
@@ -48,31 +56,31 @@ enter_unreal_mode:
 	mov di, boot_info_mem_map
 	call get_mem_list
 	jc get_mem_list_err
-	mov [boot_info_mem_map_size], ebp		; store the number of list items
+	mov [boot_info_mem_map_size], ebp			; store the number of list items
 
 	mov esi, boot_info_mem_map
 	mov eax, [boot_info_mem_map_size]
 	call init_mm								; initialize the memory manager
 
 	mov eax, 0x0								; set memory for IVT and GDT as reserved
-	mov ebx, 0x800
+	mov ebx, 0x1000
 	call mm_set_reserved
 	jc mm_set_reserved_err
 
-	xor ecx, ecx								; set the bootloader memory as reserved
-	mov ecx, [boot_info_mem_map_size]
+	mov ecx, [boot_info_mem_map_size]			; set the bootloader memory as reserved
 	add eax, ecx
 	mov eax, 24
-	mul ecx 
+	mul ecx
 	add eax, boot_info_mem_map
 	mov ebx, boot_start
 	xchg ebx, eax
 	sub ebx, eax
 	call mm_set_reserved
 	jc mm_set_reserved_err
-
-	mov eax, [boot_info_mem_map_size]			; copy the memory map, so it will be aligned
-	mov ecx, 0x24
+	
+	mov ecx, [boot_info_mem_map_size]			; set the bootloader memory as reserved
+	add eax, ecx
+	mov eax, 24
 	mul ecx
 	call mm_alloc
 
@@ -92,6 +100,7 @@ enter_unreal_mode:
 	mov si, core_path
 	call fat32_load_file
 	jc file_not_found
+	mov [boot_info_core_size], ebx
 	
 	mov cx, 0
 	mov esi, eax
@@ -166,8 +175,10 @@ fs_lba: dd 0
 ALIGN 32
 
 boot_info:
+boot_info_core_size:	dd 0
 boot_info_config_addr:	dd 0
 boot_info_config_size:	dd 0
 boot_info_mem_map_size:	dd 0
 boot_info_mem_map: 		db 0
+
 

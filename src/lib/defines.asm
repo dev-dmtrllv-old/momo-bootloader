@@ -5,6 +5,8 @@
 %define PT_TABLE 						(MBR_ADDR + 0x1BE)
 %define PT_ENTRY_SIZE					0x10
 
+%define GDT_ADDR						0x800
+
 %define EOC								0x0FFFFFF8
 
 %ifndef MBR
