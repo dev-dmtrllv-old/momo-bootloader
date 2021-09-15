@@ -119,52 +119,6 @@ char *itoa(int32_t num, char *str, int base)
 	return str;
 }
 
-// char *ltoa(int64_t num, char *str, int base)
-// {
-// 	int i = 0;
-// 	bool isNegative = false;
-
-// 	if (num == 0)
-// 	{
-// 		if (base == 16)
-// 		{
-// 			str[i++] = '0';
-// 			str[i++] = 'x';
-// 		}
-// 		str[i++] = '0';
-// 		str[i] = '\0';
-// 		return str;
-// 	}
-
-// 	if (num < 0 && base == 10)
-// 	{
-// 		isNegative = true;
-// 		num = -num;
-// 	}
-
-// 	while (num != 0)
-// 	{
-// 		int rem = num % base;
-// 		str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
-// 		num = num / base;
-// 	}
-
-// 	if (base == 16)
-// 	{
-// 		str[i++] = 'x';
-// 		str[i++] = '0';
-// 	}
-
-// 	if (isNegative)
-// 		str[i++] = '-';
-
-// 	str[i] = '\0';
-
-// 	reverse(str, i);
-
-// 	return str;
-// }
-
 char *utoa(unsigned int num, char *str, int base)
 {
 	int i = 0;
@@ -201,42 +155,6 @@ char *utoa(unsigned int num, char *str, int base)
 	return str;
 }
 
-// char *ltoa(uint64_t num, char *str, int base)
-// {
-// 	int i = 0;
-	
-// 	if (num == 0)
-// 	{
-// 		if (base == 16)
-// 		{
-// 			str[i++] = '0';
-// 			str[i++] = 'x';
-// 		}
-// 		str[i++] = '0';
-// 		str[i] = '\0';
-// 		return str;
-// 	}
-
-// 	while (num != 0)
-// 	{
-// 		int rem = num % base;
-// 		str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
-// 		num = num / base;
-// 	}
-
-// 	if (base == 16)
-// 	{
-// 		str[i++] = 'x';
-// 		str[i++] = '0';
-// 	}
-
-// 	str[i] = '\0';
-
-// 	reverse(str, i);
-
-// 	return str;
-// }
-
 size_t strlen(char* str)
 {
 	size_t i = 0;
@@ -267,4 +185,14 @@ int strcmp(char* str1, char* str2)
 		str2++;
 	}
 	return *(reinterpret_cast<const unsigned char*>(str1)) - *(reinterpret_cast<const unsigned char*>(str2));
+}
+
+char *ltoa(int64_t num, char *str, int base)
+{
+	
+}
+
+char *ltoa(uint64_t num, char *str, int base)
+{
+	
 }

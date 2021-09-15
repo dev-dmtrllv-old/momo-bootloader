@@ -2,14 +2,15 @@
 #include "core/keyboard.hpp"
 #include "core/config.hpp"
 #include "core/string.hpp"
+#include "core/mm.hpp"
 
 struct BootInfo
 {
 	char *config;
-	unsigned int configSize;
-	unsigned int memMapSize;
-	void *memMap;
-};
+	uint32_t configSize;
+	uint32_t memMapSize;
+	void* memMap;
+} __attribute__((packed));
 
 extern "C" void halt();
 
@@ -18,45 +19,52 @@ void main()
 	using namespace VGA;
 	using namespace Keyboard;
 
-	BootInfo *bootInfo = *(reinterpret_cast<BootInfo **>(0x5000 - 4));
+	BootInfo *bootInfo = *(reinterpret_cast<BootInfo **>(0x5000 - 8));
 	bootInfo->config[bootInfo->configSize] = '\0';
 
 	cls();
 
-	Config::parse(bootInfo->config);
+	// char b[16];
+	// utoa((uint32_t)bootInfo->memMap, b, 16);
+	// print(b);
 
-	uint32_t entryCount = Config::entryCount();
-	Config::Entry *entries = Config::entries();
+	mm::init(bootInfo->memMap, bootInfo->memMapSize);
 
-	for (size_t i = 0; i < entryCount; i++)
-	{
-		VGA::printChar('[');
-		char buf[5];
-		utoa(i + 1, buf, 10);
-		VGA::print(buf);
-		VGA::print("] ");
+	// Config::parse(bootInfo->config);
 
-		const uint32_t nl = entries[i].nameSize;
-		const uint32_t pl = entries[i].pathSize;
+	// uint32_t entryCount = Config::entryCount();
+	// Config::Entry *entries = Config::entries();
 
-		for (size_t j = 0; j < nl; j++)
-			VGA::printChar(entries[i].name[j]);
+	// for (size_t i = 0; i < entryCount; i++)
+	// {
+	// 	VGA::printChar('[');
+	// 	char buf[5];
+	// 	utoa(i + 1, buf, 10);
+	// 	VGA::print(buf);
+	// 	VGA::print("] ");
 
-		VGA::print(" (");
+	// 	const uint32_t nl = entries[i].nameSize;
+	// 	const uint32_t pl = entries[i].pathSize;
 
-		for (size_t j = 0; j < pl; j++)
-			VGA::printChar(entries[i].path[j]);
+	// 	for (size_t j = 0; j < nl; j++)
+	// 		VGA::printChar(entries[i].name[j]);
 
-		VGA::print(")");
+	// 	VGA::print(" (");
 
+	// 	for (size_t j = 0; j < pl; j++)
+	// 		VGA::printChar(entries[i].path[j]);
 
-		const uint8_t spaces = 80 - (pl + nl + 7);
-		for (size_t j = 0; j < spaces; j++)
-			VGA::printChar(' ');
+	// 	VGA::print(")");
 
-	}
+	// 	const uint8_t spaces = 80 - (pl + nl + 7);
+	// 	for (size_t j = 0; j < spaces; j++)
+	// 		VGA::printChar(' ');
+
+	// }
 
 	halt();
 
-	while (true){};
+	while (true)
+	{
+	};
 }

@@ -53,7 +53,7 @@ out/%.o: src/%.asm $(ASM_SRCS) $(ASM_INCLUDE_FILES)
 	@mkdir -p $(@D)
 	nasm -f bin $< -isrc -o $@ $(NASM_DEFINES)
 
-out/%.o: src/%.cpp
+out/%.o: src/%.cpp $(CPP_HEADERS)
 	@mkdir -p $(@D)
 	$(CC) $(C_FLAGS) -c $< -o $@
 

@@ -232,7 +232,7 @@ mm_set_new_map_esi:						; setsup the esi register to point to a new item in the
 
 	ret
 
-mm_alloc: ; eax -> size
+mm_alloc: ; eax = size, returns eax = address
 	xor ecx, ecx
 	mov dx, word [mem_map_items]
 	mov esi, mem_map

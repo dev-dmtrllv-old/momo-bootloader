@@ -48,10 +48,10 @@ enter_unreal_mode:
 	mov di, boot_info_mem_map
 	call get_mem_list
 	jc get_mem_list_err
-	mov word [boot_info_mem_map_size], bp		; store the number of list items
+	mov [boot_info_mem_map_size], ebp		; store the number of list items
 
-	mov si, boot_info_mem_map
-	mov ax, word [boot_info_mem_map_size]
+	mov esi, boot_info_mem_map
+	mov eax, [boot_info_mem_map_size]
 	call init_mm								; initialize the memory manager
 
 	mov eax, 0x0								; set memory for IVT and GDT as reserved
@@ -60,7 +60,7 @@ enter_unreal_mode:
 	jc mm_set_reserved_err
 
 	xor ecx, ecx								; set the bootloader memory as reserved
-	mov cx, [boot_info_mem_map_size]
+	mov ecx, [boot_info_mem_map_size]
 	add eax, ecx
 	mov eax, 24
 	mul ecx 
@@ -71,6 +71,15 @@ enter_unreal_mode:
 	call mm_set_reserved
 	jc mm_set_reserved_err
 
+	mov eax, [boot_info_mem_map_size]			; copy the memory map, so it will be aligned
+	mov ecx, 0x24
+	mul ecx
+	call mm_alloc
+
+	mov esi, boot_info_mem_map					; from
+	mov edi, eax								; to
+	rep movsb
+	mov dword [boot_info_mem_map], eax			; set pointer to the aligned memory map
 
 	mov eax, [fs_lba]							; initialize the FAT32 driver
 	xor ebx, ebx
@@ -102,8 +111,9 @@ enter_unreal_mode:
 	mov [boot_info_config_addr], eax
 	mov [boot_info_config_size], ebx
 
-	mov eax, 0x5000 - 4
+	mov eax, 0x5000 - 8
 	mov dword [eax], boot_info
+	
 	jmp 0x5000
 
 
@@ -153,8 +163,11 @@ gdt_end:
 
 fs_lba: dd 0
 
+ALIGN 32
+
 boot_info:
 boot_info_config_addr:	dd 0
 boot_info_config_size:	dd 0
-boot_info_mem_map_size:	dw 0
+boot_info_mem_map_size:	dd 0
 boot_info_mem_map: 		db 0
+
