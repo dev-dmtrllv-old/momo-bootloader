@@ -35,15 +35,15 @@ FS2_MOUNT_POINT = part2
 # END Mount options
 
 QEMU = qemu-system-i386
-QEMU_FLAGS = -M pc -drive format=raw,file=$(DISK_IMG) -no-reboot -m 512M
+QEMU_FLAGS = -M pc -no-reboot -m 512M
 
 DISK_IMG = out/disk.img
+USB = /dev/sdb
 
 all: $(ASM_OBJ) out/core.bin
 
 out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ)
 	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $^
-
 
 out/core/%_asm.o: src/core/%.asm
 	@mkdir -p $(@D)
@@ -103,9 +103,47 @@ unmount:
 
 run:
 	make write-disk
-	$(QEMU) $(QEMU_FLAGS)
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
 
 clear:
+	make clean
+	clear
+
+clean:
 	rm -rf out
 	rm -rf $(DISK_IMG)
 	rm -rf *.mem
+
+usb: $(ASM_OBJ) out/core.bin
+# make write-disk
+	sudo umount $(USB) || true
+	sudo umount $(USB)1 || true
+	sudo umount $(USB)2 || true
+	sudo parted $(USB) --script \
+	mklabel msdos \
+	mkpart primary 1MB 128MB \
+	mkpart primary 128MB 512MB \
+	set 1 boot on
+	sudo mkfs.fat -F 32 $(USB)1
+	sudo mkfs.fat -F 32 $(USB)2
+
+	sudo dd bs=1 if=out/mbr.o of=$(USB) conv=notrunc status=progress
+	sudo dd bs=1 if=out/boot1.o count=3 of=$(USB)1 conv=notrunc status=progress
+	sudo dd bs=1 skip=$(BOOT_OFFSET) if=out/boot1.o iflag=skip_bytes of=$(USB)1 seek=$(BOOT_OFFSET) conv=notrunc status=progress
+	sudo dd bs=1 seek=1024 if=out/boot2.o iflag=skip_bytes of=$(USB)1 conv=notrunc status=progress
+
+	mkdir temp || true
+	sudo mount /dev/sdb1 temp
+	sudo mkdir temp/momo || true
+	sudo cp test-config.cfg temp/momo/boot.cfg
+	sudo cp out/core.bin temp/momo/core.bin
+	sync
+	sudo umount temp
+	rmdir temp
+# sudo mkdir $(FS1_MOUNT_POINT)/momo || true
+# sudo cp test-config.cfg $(FS1_MOUNT_POINT)/momo/boot.cfg
+# sudo cp out/core.bin $(FS1_MOUNT_POINT)/momo/core.bin
+# make unmount
+	
+test-usb: usb
+	sudo $(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(USB)
