@@ -4,7 +4,7 @@
 #include "core/io.hpp"
 #include "core/string.hpp"
 
-namespace VGA
+namespace Vga
 {
 	namespace
 	{
@@ -12,7 +12,9 @@ namespace VGA
 		constexpr uint8_t ROWS = 25;
 		constexpr uint32_t VGA_MEM_ADDR = 0xb8000;
 
-		uint16_t cursorPos = 0;
+		bool isInitialized_ = false;
+
+		uint16_t cursorPos_ = 0;
 
 		uint16_t getCursorOffset()
 		{
@@ -36,16 +38,20 @@ namespace VGA
 		{
 			volatile unsigned char *mem = reinterpret_cast<unsigned char *>(VGA_MEM_ADDR);
 
-			for(size_t i = 0; i < ROWS - 1; i++)
-				memcpy(reinterpret_cast<void*>(VGA_MEM_ADDR + ((i * COLUMNS)) * 2), reinterpret_cast<void*>(VGA_MEM_ADDR + (((i + 1) * COLUMNS) * 2)), sizeof(unsigned char) * COLUMNS);
-			for(size_t i = 0; i < COLUMNS; i++)
+			for (size_t i = 0; i < ROWS - 1; i++)
+				memcpy(reinterpret_cast<void *>(VGA_MEM_ADDR + ((i * COLUMNS)) * 2), reinterpret_cast<void *>(VGA_MEM_ADDR + (((i + 1) * COLUMNS) * 2)), sizeof(unsigned char) * COLUMNS);
+			for (size_t i = 0; i < COLUMNS; i++)
 				mem[((COLUMNS * (ROWS - 1)) * 2) + (i * 2)] = ' ';
 		}
 	};
 
 	void init()
 	{
-		cursorPos = getCursorOffset();
+		if (!isInitialized_)
+		{
+			cursorPos_ = getCursorOffset();
+			isInitialized_ = true;
+		}
 	}
 
 	void printChar(char c)
@@ -53,18 +59,18 @@ namespace VGA
 		volatile unsigned char *mem = reinterpret_cast<unsigned char *>(VGA_MEM_ADDR);
 		if (Ascii::checkControlChar(c, Ascii::ControlChar::LF))
 		{
-			cursorPos += COLUMNS - (cursorPos % COLUMNS);
-			if(cursorPos >= COLUMNS * ROWS)
+			cursorPos_ += COLUMNS - (cursorPos_ % COLUMNS);
+			if (cursorPos_ >= COLUMNS * ROWS)
 			{
-				cursorPos = COLUMNS * (ROWS - 1);
+				cursorPos_ = COLUMNS * (ROWS - 1);
 				scroll();
 			}
-			setCursorOffset(cursorPos);
+			setCursorOffset(cursorPos_);
 		}
 		else if (Ascii::isChar(c))
 		{
-			mem[cursorPos++ * 2] = c;
-			setCursorOffset(cursorPos);
+			mem[cursorPos_++ * 2] = c;
+			setCursorOffset(cursorPos_);
 		}
 	}
 
@@ -93,7 +99,7 @@ namespace VGA
 		for (unsigned int i = 0; i < COLUMNS * ROWS; i++)
 			mem[i * 2] = ' ';
 
-		cursorPos = 0;
+		cursorPos_ = 0;
 		setCursorOffset(0);
 	}
 };

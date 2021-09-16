@@ -1,6 +1,6 @@
 #pragma once
 
-namespace VGA
+namespace Vga
 {
 	void init();
 	void printChar(char c);
