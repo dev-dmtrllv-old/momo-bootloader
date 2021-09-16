@@ -24,13 +24,13 @@ namespace Keyboard
 		{
 			if (c <= 126 && c >= 32)
 			{
-				VGA::printChar(c);
+				Vga::printChar(c);
 				*(buffer++) = c;
 				i++;
 				if(i >= size - 2)
 				{
 					*buffer = '\0';
-					VGA::printChar('\n');
+					Vga::printChar('\n');
 					return;
 				}
 			}
@@ -39,6 +39,6 @@ namespace Keyboard
 		}
 
 		*buffer = '\0';
-		VGA::printChar('\n');
+		Vga::printChar('\n');
 	}
 };
