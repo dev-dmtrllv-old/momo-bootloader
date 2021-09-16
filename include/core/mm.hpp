@@ -7,4 +7,7 @@ namespace MM
 	void init(void * memMap, uint32_t size);
 	void* alloc(uint32_t size);
 	void free(void* addr);
+
+	template<typename T>
+	T* alloc(uint32_t size) { return reinterpret_cast<T*>(alloc(size)); };
 };
