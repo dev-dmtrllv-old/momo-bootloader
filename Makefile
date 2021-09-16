@@ -146,4 +146,5 @@ usb: $(ASM_OBJ) out/core.bin
 # make unmount
 	
 test-usb: usb
+	sleep 1
 	sudo $(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(USB)
