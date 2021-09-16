@@ -27,7 +27,10 @@ namespace Ascii
 		size_t off = 0;
 		uint32_t total = 0;
 		for (size_t i = l; i > 0; i--)
-			total += pow(10, off++) * toInt(str[i - 1]);
+		{
+			if (isNumeric(str[i - 1]))
+				total += pow(10, off++) * toInt(str[i - 1]);
+		}
 		return total;
 	}
 };
