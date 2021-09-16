@@ -4,6 +4,7 @@
 #include "core/string.hpp"
 #include "core/mm.hpp"
 #include "core/ascii.hpp"
+#include "core/vesa.hpp"
 
 struct BootInfo
 {
@@ -32,10 +33,12 @@ void main()
 	const BootInfo *const bootInfo = getBootInfo();
 	bootInfo->config[bootInfo->configSize] = '\0';
 
-	VGA::init();
-	VGA::cls();
+	Vga::init();
+	Vga::cls();
 
 	MM::init(bootInfo->memMap, bootInfo->memMapSize);
+
+	Vesa::init();
 
 	Config::parse(bootInfo->config);
 
@@ -44,8 +47,8 @@ void main()
 
 	if (entryCount == 0)
 	{
-		VGA::print("No bootable configurations were found!\n");
-		VGA::print("starting shell...");
+		Vga::print("No bootable configurations were found!\n");
+		Vga::print("starting shell...");
 	}
 	else
 	{
@@ -55,13 +58,11 @@ void main()
 
 		if (num == 0)
 		{
-			VGA::print("starting shell...");
+			Vga::print("starting shell...");
 		}
 		else
 		{
-			VGA::printChar(static_cast<char>(num + 48));
-			VGA::print("\n\n");
-			VGA::print("booting ");
+			Vga::print("\nbooting ");
 
 			const Config::Entry *e = &entries[num - 1];
 
@@ -77,10 +78,10 @@ void main()
 			memcpy(path, e->path, e->pathSize);
 			path[pathSize] = '\0';
 
-			VGA::print(name);
-			VGA::print(" (");
-			VGA::print(path);
-			VGA::print(")\n");
+			Vga::print(name);
+			Vga::print(" (");
+			Vga::print(path);
+			Vga::print(")\n");
 		}
 	}
 
@@ -91,24 +92,24 @@ void printEntries(Config::Entry *entries, uint32_t entryCount)
 {
 	for (size_t i = 0; i < entryCount; i++)
 	{
-		VGA::printChar('[');
+		Vga::printChar('[');
 		char buf[5];
 		utoa(i + 1, buf, 10);
-		VGA::print(buf);
-		VGA::print("] ");
+		Vga::print(buf);
+		Vga::print("] ");
 
 		const uint32_t nl = entries[i].nameSize;
 		const uint32_t pl = entries[i].pathSize;
 
 		for (size_t j = 0; j < nl; j++)
-			VGA::printChar(entries[i].name[j]);
+			Vga::printChar(entries[i].name[j]);
 
-		VGA::print(" (");
+		Vga::print(" (");
 
 		for (size_t j = 0; j < pl; j++)
-			VGA::printChar(entries[i].path[j]);
+			Vga::printChar(entries[i].path[j]);
 
-		VGA::print(")\n");
+		Vga::print(")\n");
 	}
 }
 
@@ -122,7 +123,7 @@ uint32_t getBootOption(uint32_t entryCount)
 
 	while (num > entryCount)
 	{
-		VGA::print("\nChoose a number to boot or shell: ");
+		Vga::print("\nChoose a number to boot or shell: ");
 		Keyboard::getLine(buf, 8);
 		num = Ascii::strToInt(buf);
 		if (num > entryCount)
@@ -133,8 +134,8 @@ uint32_t getBootOption(uint32_t entryCount)
 			}
 			else
 			{
-				VGA::print(buf);
-				VGA::print(" is an invalid boot option!");
+				Vga::print(buf);
+				Vga::print(" is an invalid boot option!");
 			}
 		}
 	}
