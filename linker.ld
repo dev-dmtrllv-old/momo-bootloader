@@ -4,6 +4,8 @@ ENTRY(main)
 SECTIONS
 {
 	. = 0x3000;
+	
+	__coreBinaryStart = .;
  
 	.text BLOCK(4K) : ALIGN(4K)
 	{
@@ -43,5 +45,7 @@ SECTIONS
         *(.stabstr)
 	}
 
+	__coreBinaryEnd = .;
+	
     end = .;
 }

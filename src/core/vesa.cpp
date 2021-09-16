@@ -5,6 +5,6 @@ namespace VESA
 {
 	uint16_t findClosestMode()
 	{
-
+		return 0;
 	}
 };

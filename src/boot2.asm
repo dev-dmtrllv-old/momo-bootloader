@@ -127,6 +127,9 @@ enter_unreal_mode:
 	pop eax
 	call mm_free
 
+	mov eax, 0x7A00
+	call mm_free
+
 	xor eax, eax
 	mov ax, [mem_map_items]
 	mov [boot_info_mem_map_size], eax

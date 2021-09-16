@@ -186,13 +186,3 @@ int strcmp(char* str1, char* str2)
 	}
 	return *(reinterpret_cast<const unsigned char*>(str1)) - *(reinterpret_cast<const unsigned char*>(str2));
 }
-
-char *ltoa(int64_t num, char *str, int base)
-{
-	
-}
-
-char *ltoa(uint64_t num, char *str, int base)
-{
-	
-}

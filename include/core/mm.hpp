@@ -4,5 +4,7 @@
 
 namespace MM
 {
-	void init(void * memMap, uint32_t size, uint32_t coreBinarySize);
+	void init(void * memMap, uint32_t size);
+	void* alloc(uint32_t size);
+	void free(void* addr);
 };

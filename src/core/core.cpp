@@ -17,19 +17,25 @@ struct BootInfo
 extern "C" void halt();
 
 void printEntries(Config::Entry *entries, uint32_t entryCount);
-uint32_t getBootOption(Config::Entry *entries, uint32_t entryCount);
+uint32_t getBootOption(uint32_t entryCount);
+
+static BootInfo bootInfoCopy;
+
+inline BootInfo* getBootInfo()
+{
+	const BootInfo* const b = *(reinterpret_cast<BootInfo **>(0x3000 - 8));
+	return reinterpret_cast<BootInfo*>(memcpy(&bootInfoCopy, b, sizeof(BootInfo)));
+}
 
 void main()
 {
-	BootInfo *bootInfo = *(reinterpret_cast<BootInfo **>(0x3000 - 8));
+	const BootInfo *const bootInfo = getBootInfo();
 	bootInfo->config[bootInfo->configSize] = '\0';
 
 	VGA::init();
 	VGA::cls();
 
-	MM::init(bootInfo->memMap, bootInfo->memMapSize, bootInfo->coreBinarySize);
-
-	halt();
+	MM::init(bootInfo->memMap, bootInfo->memMapSize);
 
 	Config::parse(bootInfo->config);
 
@@ -45,7 +51,7 @@ void main()
 	{
 		printEntries(entries, entryCount);
 
-		uint32_t num = getBootOption(entries, entryCount);
+		uint32_t num = getBootOption(entryCount);
 
 		if (num == 0)
 		{
@@ -106,11 +112,13 @@ void printEntries(Config::Entry *entries, uint32_t entryCount)
 	}
 }
 
-uint32_t getBootOption(Config::Entry *entries, uint32_t entryCount)
+uint32_t getBootOption(uint32_t entryCount)
 {
 	uint32_t num = 0xFFFFFFFF;
 
 	char buf[8];
+
+	char shellString[] = "shell";
 
 	while (num > entryCount)
 	{
@@ -119,7 +127,7 @@ uint32_t getBootOption(Config::Entry *entries, uint32_t entryCount)
 		num = Ascii::strToInt(buf);
 		if (num > entryCount)
 		{
-			if (strcmp(buf, "shell") == 0)
+			if (strcmp(buf, shellString) == 0)
 			{
 				return 0;
 			}
