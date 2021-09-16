@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/types.hpp"
+
 namespace Ascii
 {
 	enum class ControlChar
@@ -40,8 +42,12 @@ namespace Ascii
 		DEL	= 127,	// delete (rubout)
 	};
 
+	bool isNumeric(char c);
+	bool isLetter(char c);
 	bool isAlphaNumeric(char c);
 	bool isChar(char c);
 	bool isControlChar(char c);
 	bool checkControlChar(char c, ControlChar controlChar);
+	uint32_t toInt(char c);
+	uint32_t strToInt(char* str);
 };
