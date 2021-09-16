@@ -6,7 +6,7 @@ namespace Keyboard
 	char getChar()
 	{
 		int c;
-		asm volatile(
+		__asm__ volatile(
 			"xor %%eax, %%eax;\n\t"
 			"int $0x16;\n\t"
 			"mov %%eax, %0"
