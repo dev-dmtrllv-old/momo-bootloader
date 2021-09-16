@@ -210,11 +210,71 @@ mm_set_reserved: ; eax -> base address, ebx -> size
 		ret
 
 
+
 mm_free: ; eax -> base address
+	call mm_get_mem_block
+	xor eax, eax									; load the correct address from the pointer into esi and edi
+	mov ax, 24
+	mul cx											; ax is now the offset from the mem_map
+	add eax, mem_map
+	mov esi, eax
+	
+	; check if we can merge with a block
+	push esi
+	mov eax, [esi]
+	add eax, [esi + 8]								; find the block above
+	call mm_get_mem_block
+	pop esi
 
+	xor eax, eax									; load the correct address from the pointer into esi and edi
+	mov ax, 24
+	mul cx											; ax is now the offset from the mem_map
+	add eax, mem_map
+	mov edi, eax
+
+	mov eax, [edi + 16]
+	cmp eax, 0x1
+	je .merge_block_above
+
+	push esi
+	mov eax, [esi]
+	sub eax, 1
+	call mm_get_mem_block
+	pop esi
+	xor eax, eax									; load the correct address from the pointer into esi and edi
+	mov ax, 24
+	mul cx											; ax is now the offset from the mem_map
+	add eax, mem_map
+	mov edi, eax
+
+	mov eax, [edi + 16]
+	cmp eax, 0x1
+	je .merge_block_beneath
+	mov word [esi + 16], 0x1
 	ret
+	
+	.merge_block_above:
+		mov eax, [esi]
+		mov [edi], eax								; set new base
+		mov eax, [esi + 8]
+		add eax, [edi + 8]
+		mov [edi + 8], eax							; set new size
+		jmp .empty_block
 
-mm_set_new_map_esi:						; setsup the esi register to point to a new item in the mem_map array
+	.merge_block_beneath:
+		mov eax, [esi + 8]
+		add eax, [edi + 8]
+		mov [edi + 8], eax
+
+	.empty_block:
+		mov dword [esi], 0
+		mov dword [esi + 8], 0
+		mov dword [esi + 16], 0
+		ret
+
+
+
+mm_set_new_map_esi: ; setsup the esi register to point to a new item in the mem_map array
 	push eax
 	push ecx
 	push edx
@@ -266,4 +326,5 @@ mm_alloc: ; eax = size, returns eax = address
 	ret
 
 mem_map_items:	dw 0
+ALIGN 32
 mem_map: 		TIMES 512 dd 0

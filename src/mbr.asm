@@ -30,8 +30,9 @@ relocated_start:
 	mov si, PT_TABLE
 	mov cx, 4								; loop over the 4 entries
 find_active_loop:
-	mov ax, [si]
-	cmp ax, 0x80
+	xor eax, eax
+	mov al, [si]
+	cmp al, 0x80
 	je found_active_partition
 	add si, PT_ENTRY_SIZE
 	loop find_active_loop

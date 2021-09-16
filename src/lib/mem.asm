@@ -38,3 +38,16 @@ get_mem_list:
 	.get_mem_list_err:
 		stc							; set the carry flag on error
 		ret
+
+mem_cpy: ; esi = src, edi = dest, ecx = size
+	cmp ecx, 0
+	je .done
+	mov al, [esi]
+	mov [edi], al
+	inc esi
+	inc edi
+	dec ecx
+	jmp mem_cpy
+
+	.done:
+		ret

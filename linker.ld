@@ -3,7 +3,7 @@ OUTPUT_ARCH(i386)
 ENTRY(main)
 SECTIONS
 {
-	. = 0x5000;
+	. = 0x3000;
  
 	.text BLOCK(4K) : ALIGN(4K)
 	{

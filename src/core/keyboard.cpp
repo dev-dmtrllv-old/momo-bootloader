@@ -20,14 +20,25 @@ namespace Keyboard
 	{
 		char c = getChar();
 		unsigned int i = 0;
-		while (c != 13 && i < size)
+		while (c != 13 && c != 10)
 		{
 			if (c <= 126 && c >= 32)
 			{
 				VGA::printChar(c);
 				*(buffer++) = c;
+				i++;
+				if(i >= size - 2)
+				{
+					*buffer = '\0';
+					VGA::printChar('\n');
+					return;
+				}
 			}
+
 			c = getChar();
 		}
+
+		*buffer = '\0';
+		VGA::printChar('\n');
 	}
 };

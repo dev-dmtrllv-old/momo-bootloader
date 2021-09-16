@@ -11,6 +11,8 @@
 [bits 16]
 
 boot_start:
+	mov sp, 0x7C00
+	mov bp, sp
 	mov [fs_lba], eax
 	call clear_screen
 	
@@ -66,28 +68,16 @@ enter_unreal_mode:
 	mov ebx, 0x1000
 	call mm_set_reserved
 	jc mm_set_reserved_err
-
-	mov ecx, [boot_info_mem_map_size]			; set the bootloader memory as reserved
-	add eax, ecx
-	mov eax, 24
-	mul ecx
-	add eax, boot_info_mem_map
-	mov ebx, boot_start
-	xchg ebx, eax
-	sub ebx, eax
-	call mm_set_reserved
-	jc mm_set_reserved_err
 	
-	mov ecx, [boot_info_mem_map_size]			; set the bootloader memory as reserved
-	add eax, ecx
-	mov eax, 24
-	mul ecx
-	call mm_alloc
+	mov eax, 0x7A00								; add 0x200 bytes for the stack
+	mov ebx, boot_info_mem_map
+	sub ebx, eax
+	call mm_set_reserved						; set the bootloader memory as reserved
 
-	mov esi, boot_info_mem_map					; from
-	mov edi, eax								; to
-	rep movsb
-	mov dword [boot_info_mem_map], eax			; set pointer to the aligned memory map
+	mov eax, CORE_ADDR - 8						; set memory reserved for the boot core
+	mov ebx, 0x7A00								; (CORE_ADDR - 8 because we pass the pointer to the boot info struct at this address)
+	sub ebx, CORE_ADDR - 8
+	call mm_set_reserved
 
 	mov eax, [fs_lba]							; initialize the FAT32 driver
 	xor ebx, ebx
@@ -100,32 +90,54 @@ enter_unreal_mode:
 	mov si, core_path
 	call fat32_load_file
 	jc file_not_found
+	push eax
 	mov [boot_info_core_size], ebx
-	
-	mov cx, 0
+
+	mov ecx, 0
 	mov esi, eax
-	mov edi, 0x5000
+	mov edi, CORE_ADDR
 	.copy_core:
-		mov eax, [esi]
-		mov [edi], eax 
+		mov al, byte [esi]
+		mov byte [edi], al
 		inc esi
 		inc edi
-		dec bx
-		cmp bx, 0
+		dec ebx
+		cmp ebx, 0
 		jne .copy_core
-	
+
+	.remove_file_buf:	
+		pop eax
+		call mm_free
+
 	mov si, config_path
 	call fat32_load_file
 	jc file_not_found
-	mov [boot_info_config_addr], eax
+
 	mov [boot_info_config_size], ebx
-
-	mov eax, 0x5000 - 8
-	mov dword [eax], boot_info
 	
-	jmp 0x5000
+	push eax
+	mov eax, ebx
+	call mm_alloc
+	mov [boot_info_config_addr], eax
+	mov ecx, ebx
+	pop esi
+	push esi
+	mov edi, eax
+	call mem_cpy
+	pop eax
+	call mm_free
 
+	xor eax, eax
+	mov ax, [mem_map_items]
+	mov [boot_info_mem_map_size], eax
+	mov dword [boot_info_mem_map], mem_map
 
+	mov eax, CORE_ADDR - 8
+	mov dword [eax], boot_info
+
+	call fat32_release_mem
+
+	jmp CORE_ADDR
 
 error_handler file_not_found, file_not_found_msg
 error_handler a20_failed, a20_fail_msg

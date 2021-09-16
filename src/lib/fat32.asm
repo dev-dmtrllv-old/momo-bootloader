@@ -23,19 +23,18 @@ fat32_init: ; eax = file systems LBA
 
 	xor eax, eax									; allocate some space for reading the file to before copying it to its destination
 	mov ax, [bpb_bytes_per_sector]
+	push eax
 	call mm_alloc
 	mov [file_buf_addr], eax
+	pop eax											; allocate enough space to load 1 sector for the fat
+	call mm_alloc
+	mov [fat32_fat_buf_addr], eax
 
 	xor eax, eax									; calculate the fat lba offset
 	mov ax, word [bpb_reserved_sectors]
 	mov ecx, [fat32_fs_lba]
 	add eax, ecx
 	mov [fat32_fat_lba], eax
-
-	xor eax, eax									; allocate enough space to load 1 sector for the fat
-	mov ax, word [bpb_bytes_per_sector]
-	call mm_alloc
-	mov [fat32_fat_buf_addr], eax
 
 	xor eax, eax
 	mov ax, word [bpb_bytes_per_sector]
@@ -295,6 +294,16 @@ fat32_load_file: ; esi -> pointer to file path, 	returns eax = pointer to file, 
 	
 	.done:
 		ret
+
+
+fat32_release_mem:
+	mov eax, [fat32_root_dir_addr]
+	call mm_free
+	mov eax, [fat32_fat_buf_addr]
+	call mm_free
+	mov eax, [file_buf_addr]
+	call mm_free
+	ret
 
 
 cluster_indices_per_sector:		dd 0x0
