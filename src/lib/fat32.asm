@@ -107,22 +107,30 @@ fat32_load_cluster: ; eax = cluster number, ebx = address where to load
 		call read_sectors
 		pop ebx
 		jc .load_cluster_err
-		push cx
+		push ecx
+		xor ecx, ecx
 		mov cx, [bpb_bytes_per_sector]				; bytes to copy
-		mov esi, [file_buf_addr]							; from
-		mov di, bx									; to
-		add bx, cx
-		rep movsb									; copy 1 whole sector to bx
-		pop cx
-		inc cx
+		mov esi, [file_buf_addr]					; from
+		mov edi, ebx								; to
+		add ebx, ecx
+	
+	.copy:											; copy 1 sector to bx
+		mov al, byte [esi]
+		mov byte [edi], al
+		inc esi
+		inc edi
+		dec ecx
+		cmp ecx, 0
+		jne .copy
+
+		pop ecx
+		inc ecx
 		inc dword [dap_lba]
-		cmp cx, dx
+		cmp ecx, edx
 		jl .load_and_copy_sector
 	
 	.load_cluster_err:
 		ret
-
-
 
 fat32_get_path_info: ; esi = pointer to the path
 	push esi
