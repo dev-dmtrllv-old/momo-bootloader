@@ -22,10 +22,10 @@ uint32_t getBootOption(uint32_t entryCount);
 
 static BootInfo bootInfoCopy;
 
-inline BootInfo* getBootInfo()
+inline BootInfo *getBootInfo()
 {
-	const BootInfo* const b = *(reinterpret_cast<BootInfo **>(0x3000 - 8));
-	return reinterpret_cast<BootInfo*>(memcpy(&bootInfoCopy, b, sizeof(BootInfo)));
+	const BootInfo *const b = *(reinterpret_cast<BootInfo **>(0x3000 - 8));
+	return reinterpret_cast<BootInfo *>(memcpy(&bootInfoCopy, b, sizeof(BootInfo)));
 }
 
 void main()
@@ -117,26 +117,27 @@ uint32_t getBootOption(uint32_t entryCount)
 {
 	uint32_t num = 0xFFFFFFFF;
 
-	char buf[8];
+	char buf[128];
 
 	char shellString[] = "shell";
 
 	while (num > entryCount)
 	{
 		Vga::print("\nChoose a number to boot or shell: ");
-		Keyboard::getLine(buf, 8);
-		num = Ascii::strToInt(buf);
-		if (num > entryCount)
+		Keyboard::getLine(buf, 128);
+		if (strcmp(shellString, buf) == 0)
 		{
-			if (strcmp(buf, shellString) == 0)
-			{
-				return 0;
-			}
-			else
-			{
-				Vga::print(buf);
-				Vga::print(" is an invalid boot option!");
-			}
+			return 0;
+		}
+
+		num = Ascii::strToInt(buf);
+		
+		if (num > entryCount || num == 0)
+		{
+			Vga::print(buf);
+			Vga::print(" is an invalid boot option!");
+			num = 0xFFFFFFFF;
+			
 		}
 	}
 
