@@ -15,7 +15,7 @@ struct BootInfo
 	void *memMap;
 } __attribute__((packed));
 
-extern "C" void halt();
+[[noreturn]] void halt() { __asm__ volatile("cli\nhlt"); }
 
 void printEntries(Config::Entry *entries, uint32_t entryCount);
 uint32_t getBootOption(uint32_t entryCount);
@@ -35,10 +35,28 @@ void main()
 
 	Vga::init();
 	Vga::cls();
-
 	MM::init(bootInfo->memMap, bootInfo->memMapSize);
 
-	Vesa::init();
+	if (!Vesa::init())
+	{
+		Vga::print("Vesa initialization error!");
+		halt();
+		return;
+	}
+
+	uint32_t frameBuffAddr;
+
+	uint16_t foundMode = Vesa::findClosestMode(1920, 1080, 32, &frameBuffAddr);
+
+	char buf[16];
+
+	if (!Vesa::setMode(foundMode | 0x4000))
+	{
+		Vga::print("Could not change vesa mode!");
+		halt();
+	}
+
+	halt();
 
 	Config::parse(bootInfo->config);
 
@@ -47,42 +65,42 @@ void main()
 
 	if (entryCount == 0)
 	{
-		Vga::print("No bootable configurations were found!\n");
-		Vga::print("starting shell...");
+		// Vga::print("No bootable configurations were found!\n");
+		// Vga::print("starting shell...");
 	}
 	else
 	{
-		printEntries(entries, entryCount);
+		// printEntries(entries, entryCount);
 
-		uint32_t num = getBootOption(entryCount);
+		// uint32_t num = getBootOption(entryCount);
 
-		if (num == 0)
-		{
-			Vga::print("starting shell...");
-		}
-		else
-		{
-			Vga::print("\nbooting ");
+		// if (num == 0)
+		// {
+		// Vga::print("starting shell...");
+		// }
+		// else
+		// {
+		// Vga::print("\nbooting ");
 
-			const Config::Entry *e = &entries[num - 1];
+		// const Config::Entry *e = &entries[num - 1];
 
-			const uint32_t nameSize = e->nameSize + 1;
-			const uint32_t pathSize = e->pathSize + 1;
+		// const uint32_t nameSize = e->nameSize + 1;
+		// const uint32_t pathSize = e->pathSize + 1;
 
-			char name[nameSize];
-			char path[pathSize];
+		// char name[nameSize];
+		// char path[pathSize];
 
-			memcpy(name, e->name, e->nameSize);
-			name[nameSize] = '\0';
+		// memcpy(name, e->name, e->nameSize);
+		// name[nameSize] = '\0';
 
-			memcpy(path, e->path, e->pathSize);
-			path[pathSize] = '\0';
+		// memcpy(path, e->path, e->pathSize);
+		// path[pathSize] = '\0';
 
-			Vga::print(name);
-			Vga::print(" (");
-			Vga::print(path);
-			Vga::print(")\n");
-		}
+		// Vga::print(name);
+		// Vga::print(" (");
+		// Vga::print(path);
+		// Vga::print(")\n");
+		// }
 	}
 
 	halt();
@@ -131,13 +149,12 @@ uint32_t getBootOption(uint32_t entryCount)
 		}
 
 		num = Ascii::strToInt(buf);
-		
+
 		if (num > entryCount || num == 0)
 		{
 			Vga::print(buf);
 			Vga::print(" is an invalid boot option!");
 			num = 0xFFFFFFFF;
-			
 		}
 	}
 
