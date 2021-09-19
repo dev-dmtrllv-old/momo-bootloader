@@ -79,17 +79,6 @@ namespace Vesa
 			BIOS_INTERRUPT($0x10, regs);
 
 			return interruptSuccess(regs);
-
-			// int eax;
-			// __asm__ volatile(
-			// 	"mov %1, %%edi\t\n"
-			// 	"mov $0x4f00, %%eax\t\n"
-			// 	"int $0x10\t\n"
-			// 	"mov %%eax, %0\t\n"
-			// 	: "=A"(eax)
-			// 	: "D"(infoBlock)
-			// 	: "eax");
-			// return eax == 0x004F;
 		}
 
 		void validateControllerInfo(VbeInfoBlock *info)
@@ -225,22 +214,11 @@ namespace Vesa
 			gfx.frameBuffer = modeInfo->framebuffer;
 			gfx.height = modeInfo->height;
 			gfx.width = modeInfo->width;
-
-			// char buf[16];
-			// utoa(modeInfo->redPosition, buf, 10);
-			// Vga::print(buf);
-			// Vga::print("\n");
-			// utoa(modeInfo->greenPosition, buf, 10);
-			// Vga::print(buf);
-			// Vga::print("\n");
-			// utoa(modeInfo->bluePosition, buf, 10);
-			// Vga::print(buf);
-			// Vga::print("\n");
-			gfx.rgbBitOffset[0] = modeInfo->redPosition / 2;
-			gfx.rgbBitOffset[1] = modeInfo->greenPosition / 2;
-			gfx.rgbBitOffset[2] = modeInfo->bluePosition / 2;
+			gfx.rgbBitOffset[0] = modeInfo->redPosition;
+			gfx.rgbBitOffset[1] = modeInfo->greenPosition;
+			gfx.rgbBitOffset[2] = modeInfo->bluePosition;
 			gfx.pitch = modeInfo->pitch;
-
+			
 			MM::free(modeInfo);
 
 			return true;
