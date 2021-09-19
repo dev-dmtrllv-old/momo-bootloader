@@ -5,9 +5,12 @@
 #include "core/mm.hpp"
 #include "core/ascii.hpp"
 #include "core/vesa.hpp"
+#include "core/drive.hpp"
 
 struct BootInfo
 {
+	uint32_t bootDriveNumber;
+	uint32_t sectorSize;
 	uint32_t coreBinarySize;
 	char *config;
 	uint32_t configSize;
@@ -15,7 +18,7 @@ struct BootInfo
 	void *memMap;
 } __attribute__((packed));
 
-[[noreturn]] void halt() { __asm__ volatile("cli\nhlt"); }
+[[noreturn]] inline void halt() { __asm__ volatile("cli\nhlt"); }
 
 void printEntries(Config::Entry *entries, uint32_t entryCount);
 uint32_t getBootOption(uint32_t entryCount);
@@ -35,28 +38,41 @@ void main()
 
 	Vga::init();
 	Vga::cls();
+
 	MM::init(bootInfo->memMap, bootInfo->memMapSize);
+
+	Drive::init(bootInfo->bootDriveNumber, bootInfo->sectorSize);
+
+	Drive::PartitionTable pt;
+
+	Drive::getPartitionTable(&pt);
+
+	char buf[32];
+
+	for(size_t i = 0; i < 4; i++)
+	{
+		Vga::print("partition ");
+		Vga::print(utoa(i + 1, buf, 10));
+		Vga::print(" flags:");
+		Vga::print(utoa(pt.entries[i].flags, buf, 16));
+		Vga::print("\n");
+	}
+
+	halt();
 
 	if (!Vesa::init())
 	{
 		Vga::print("Vesa initialization error!");
 		halt();
-		return;
 	}
 
-	uint32_t frameBuffAddr;
-
-	uint16_t foundMode = Vesa::findClosestMode(1920, 1080, 32, &frameBuffAddr);
-
-	char buf[16];
+	uint16_t foundMode = Vesa::findClosestMode(1920, 1080, 32, true);
 
 	if (!Vesa::setMode(foundMode | 0x4000))
 	{
 		Vga::print("Could not change vesa mode!");
 		halt();
 	}
-
-	halt();
 
 	Config::parse(bootInfo->config);
 
@@ -106,57 +122,60 @@ void main()
 	halt();
 }
 
-void printEntries(Config::Entry *entries, uint32_t entryCount)
-{
-	for (size_t i = 0; i < entryCount; i++)
-	{
-		Vga::printChar('[');
-		char buf[5];
-		utoa(i + 1, buf, 10);
-		Vga::print(buf);
-		Vga::print("] ");
+// void printEntries(Config::Entry *entries, uint32_t entryCount)
+// {
+// 	for (size_t i = 0; i < entryCount; i++)
+// 	{
+// 		Vga::printChar('[');
+// 		char buf[5];
+// 		utoa(i + 1, buf, 10);
+// 		Vga::print(buf);
+// 		Vga::print("] ");
 
-		const uint32_t nl = entries[i].nameSize;
-		const uint32_t pl = entries[i].pathSize;
+// 		const uint32_t nl = entries[i].nameSize;
+// 		const uint32_t pl = entries[i].pathSize;
 
-		for (size_t j = 0; j < nl; j++)
-			Vga::printChar(entries[i].name[j]);
+// 		for (size_t j = 0; j < nl; j++)
+// 			Vga::printChar(entries[i].name[j]);
 
-		Vga::print(" (");
+// 		Vga::print(" (");
 
-		for (size_t j = 0; j < pl; j++)
-			Vga::printChar(entries[i].path[j]);
+// 		for (size_t j = 0; j < pl; j++)
+// 			Vga::printChar(entries[i].path[j]);
 
-		Vga::print(")\n");
-	}
-}
+// 		Vga::print(")\n");
+// 	}
+// }
 
-uint32_t getBootOption(uint32_t entryCount)
-{
-	uint32_t num = 0xFFFFFFFF;
+// uint32_t getBootOption(uint32_t entryCount)
+// {
+// 	uint32_t num = 0xFFFFFFFF;
 
-	char buf[128];
+// 	char buf[128];
 
-	char shellString[] = "shell";
+// 	char shellString[] = "shell";
 
-	while (num > entryCount)
-	{
-		Vga::print("\nChoose a number to boot or shell: ");
-		Keyboard::getLine(buf, 128);
-		if (strcmp(shellString, buf) == 0)
-		{
-			return 0;
-		}
+// 	while (num > entryCount)
+// 	{
+// 		Vga::print("\nChoose a number to boot or shell: ");
+// 		Keyboard::getLine(buf, 128);
+// 		if (strcmp(shellString, buf) == 0)
+// 		{
+// 			return 0;
+// 		}
 
-		num = Ascii::strToInt(buf);
+// 		num = Ascii::strToInt(buf);
 
-		if (num > entryCount || num == 0)
-		{
-			Vga::print(buf);
-			Vga::print(" is an invalid boot option!");
-			num = 0xFFFFFFFF;
-		}
-	}
+// 		if (num > entryCount || num == 0)
+// 		{
+// 			Vga::print(buf);
+// 			Vga::print(" is an invalid boot option!");
+// 			num = 0xFFFFFFFF;
+// 		}
+// 	}
 
-	return num;
-}
+// 	return num;
+// }
+
+// used when a pure virtual function cannot be be called
+extern "C" void __cxa_pure_virtual() {  }
