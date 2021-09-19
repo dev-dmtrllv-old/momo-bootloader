@@ -135,6 +135,15 @@ enter_unreal_mode:
 	mov [boot_info_mem_map_size], eax
 	mov dword [boot_info_mem_map], mem_map
 
+
+	xor eax, eax
+	mov al, [bpb_drive]
+	mov [boot_info_boot_drive], eax
+
+	xor eax, eax
+	mov ax, [bpb_bytes_per_sector]
+	mov [boot_info_sector_size], eax
+
 	mov eax, CORE_ADDR - 8
 	mov dword [eax], boot_info
 
@@ -190,6 +199,8 @@ fs_lba: dd 0
 ALIGN 32
 
 boot_info:
+boot_info_boot_drive:	dd 0
+boot_info_sector_size:	dd 0
 boot_info_core_size:	dd 0
 boot_info_config_addr:	dd 0
 boot_info_config_size:	dd 0
