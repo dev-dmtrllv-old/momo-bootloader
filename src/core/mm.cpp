@@ -160,6 +160,38 @@ namespace MM
 		return ((addr / alignment) + 1) * alignment;
 	}
 
+	void *reserve(uint32_t minAddr, uint32_t maxAddr, uint32_t size)
+	{
+		Pool::MemBlockList *l = &Pool::memList;
+		while (l != nullptr)
+		{
+			if (l->freeBlockCount > 0)
+			{
+				for (size_t i = 0; i < Pool::maxListSize; i++)
+				{
+					MemBlock *b = &l->blocks[i];
+					if (!b->isUsed && (b->base >= minAddr) && (b->base + b->size <= maxAddr))
+					{
+						if ((b->size > size))
+						{
+							b->size -= size;
+							uint32_t allocAddr = b->base + b->size;
+							Pool::setBlock(allocAddr, size, true);
+							return reinterpret_cast<void *>(allocAddr);
+						}
+						else if (b->size == size)
+						{
+							b->isUsed = true;
+							return reinterpret_cast<void *>(b->base);
+						}
+					}
+				}
+			}
+			l = l->next;
+		}
+		return nullptr;
+	}
+
 	void *alloc(size_t size)
 	{
 		Pool::MemBlockList *l = &Pool::memList;
