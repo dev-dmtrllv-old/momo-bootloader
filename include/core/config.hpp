@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "core/macros.hpp"
 
 namespace Config
 {
@@ -10,7 +11,7 @@ namespace Config
 		uint32_t nameSize;
 		const char* path;
 		uint32_t pathSize;
-	};
+	} PACKED;
 
 
 	uint32_t entryCount();

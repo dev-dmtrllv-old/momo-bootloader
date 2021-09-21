@@ -6,6 +6,7 @@
 #include "core/ascii.hpp"
 #include "core/vesa.hpp"
 #include "core/drive.hpp"
+#include "core/macros.hpp"
 
 struct BootInfo
 {
@@ -16,7 +17,7 @@ struct BootInfo
 	uint32_t configSize;
 	uint32_t memMapSize;
 	void *memMap;
-} __attribute__((packed));
+} PACKED;
 
 [[noreturn]] inline void halt() { __asm__ volatile("cli\nhlt"); }
 

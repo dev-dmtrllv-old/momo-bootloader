@@ -4,6 +4,7 @@
 #include "core/vga.hpp"
 #include "core/string.hpp"
 #include "core/bios.hpp"
+#include "core/macros.hpp"
 
 namespace Vesa
 {
@@ -23,7 +24,7 @@ namespace Vesa
 			uint32_t oemProductRevPtr;	// Pointer to Product Revision String
 			uint8_t reserved[222];		// Reserved for VBE implementation scratch area
 			uint8_t oemData[256];		// Data Area for OEM Strings
-		} __attribute__((packed));
+		} PACKED;
 
 		struct VbeModeInfo
 		{
@@ -62,7 +63,7 @@ namespace Vesa
 			uint32_t offScreenMemoff;
 			uint16_t offScreenMemSize; // size of memory in the framebuffer but not being displayed on the screen
 			uint8_t reserved1[206];
-		} __attribute__((packed));
+		} PACKED;
 
 		bool isInitialized_ = false;
 

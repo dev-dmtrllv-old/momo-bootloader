@@ -3,6 +3,7 @@
 #include "core/mm.hpp"
 #include "core/string.hpp"
 #include "core/vga.hpp"
+#include "core/macros.hpp"
 
 namespace Drive
 {
@@ -16,7 +17,7 @@ namespace Drive
 			uint16_t bufferOffset;
 			uint16_t bufferSegment;
 			uint64_t lba;
-		} __attribute__((packed));
+		} PACKED;
 
 		Dap* dap_;
 

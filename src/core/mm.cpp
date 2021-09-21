@@ -4,6 +4,7 @@
 #include "core/vga.hpp"
 #include "core/keyboard.hpp"
 #include "core/core_info.hpp"
+#include "core/macros.hpp"
 
 namespace MM
 {
@@ -13,20 +14,20 @@ namespace MM
 		uint64_t size;
 		uint32_t freeFlag;
 		uint32_t acpiFlags;
-	} __attribute__((packed));
+	} PACKED;
 
 	struct MemBlock
 	{
 		uint64_t base;
 		uint64_t size;
 		bool isUsed;
-	} __attribute__((packed));
+	} PACKED;
 
 	struct FixedReservedBlock
 	{
 		uint64_t base;
 		uint64_t top;
-	} __attribute__((packed));
+	} PACKED;
 
 	namespace
 	{
@@ -42,7 +43,7 @@ namespace MM
 			size_t freeBlockCount;
 			MemBlock blocks[maxListSize];
 			MemBlockList *next;
-		} __attribute__((packed));
+		} PACKED;
 
 		MemBlockList memList;
 		MemBlockList *lastList;

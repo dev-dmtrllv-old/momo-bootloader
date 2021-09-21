@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/types.hpp"
+#include "core/macros.hpp"
 
 namespace Drive
 {
@@ -16,12 +17,12 @@ namespace Drive
 		uint8_t endCylinder;	
 		uint32_t lba;			// starting LBA of the partition
 		uint32_t sectorCount; 	// number of sectors in the partition
-	};
+	} PACKED;
 
 	struct PartitionTable
 	{
 		PartitionEntry entries[4];
-	};
+	} PACKED;
 
 	void init(uint32_t bootDriveNumber, uint32_t sectorSize);
 
