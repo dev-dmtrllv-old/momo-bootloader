@@ -25,6 +25,6 @@ namespace Drive
 	} PACKED;
 
 	void init(uint32_t bootDriveNumber, uint32_t sectorSize);
-
 	void getPartitionTable(PartitionTable* pt);
+	void *loadSector(uint64_t lba, void *dest);
 };

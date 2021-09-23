@@ -11,10 +11,10 @@ OPTIMIZATION = -O2
 
 TARGET = i686
 
-C_FLAGS = -ffreestanding $(OPTIMIZATION) -m16 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
+C_FLAGS = -ffreestanding $(OPTIMIZATION) -g -m16 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
 OBJCPY = $(TARGET)-elf-objcopy
-LD_FLAGS = -nostdlib -nolibc -nostartfiles -nodefaultlibs -fno-common -ffreestanding -lgcc $(OPTIMIZATION)
+LD_FLAGS = -nostdlib -nolibc -nostartfiles -g -nodefaultlibs -fno-common -ffreestanding -lgcc $(OPTIMIZATION)
 
 ASM_SRCS = $(wildcard src/*.asm)
 ASM_INCLUDE_DIR = src/lib
@@ -35,7 +35,7 @@ FS2_MOUNT_POINT = part2
 # END Mount options
 
 QEMU = qemu-system-i386
-QEMU_FLAGS = -M pc -no-reboot -m 512M
+QEMU_FLAGS = -M pc -no-reboot -m 512M -s -S
 
 DISK_IMG = out/disk.img
 USB = /dev/sdb
@@ -43,7 +43,11 @@ USB = /dev/sdb
 all: $(ASM_OBJ) out/core.bin
 
 out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ) linker.ld
-	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
+	$(CC) -Tlinker.ld -o out/core.elf $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
+	objcopy --only-keep-debug out/core.elf out/core.sym
+	objcopy --strip-debug out/core.elf
+	objcopy -O binary out/core.elf $@
+	rm -rf out/core.elf
 
 out/core/%_asm.o: src/core/%.asm
 	@mkdir -p $(@D)
