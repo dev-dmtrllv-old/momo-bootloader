@@ -11,10 +11,10 @@ OPTIMIZATION = -O2
 
 TARGET = i686
 
-C_FLAGS = -ffreestanding $(OPTIMIZATION) -m16 -Wall -Wextra -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
+C_FLAGS = -ffreestanding $(OPTIMIZATION) -m16 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
 OBJCPY = $(TARGET)-elf-objcopy
-LD_FLAGS = -fno-common -ffreestanding -nostdlib -lgcc $(OPTIMIZATION)
+LD_FLAGS = -nostdlib -nolibc -nostartfiles -nodefaultlibs -fno-common -ffreestanding -lgcc $(OPTIMIZATION)
 
 ASM_SRCS = $(wildcard src/*.asm)
 ASM_INCLUDE_DIR = src/lib
@@ -43,7 +43,7 @@ USB = /dev/sdb
 all: $(ASM_OBJ) out/core.bin
 
 out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ) linker.ld
-	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $^
+	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
 
 out/core/%_asm.o: src/core/%.asm
 	@mkdir -p $(@D)

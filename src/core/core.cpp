@@ -19,8 +19,6 @@ struct BootInfo
 	void *memMap;
 } PACKED;
 
-[[noreturn]] inline void halt() { __asm__ volatile("cli\nhlt"); }
-
 void printEntries(Config::Entry *entries, uint32_t entryCount);
 uint32_t getBootOption(uint32_t entryCount);
 
@@ -59,12 +57,10 @@ void main()
 		Vga::print("\n");
 	}
 
-	halt();
-
 	if (!Vesa::init())
 	{
 		Vga::print("Vesa initialization error!");
-		halt();
+		return;
 	}
 
 	uint16_t foundMode = Vesa::findClosestMode(1920, 1080, 32, true);
@@ -72,7 +68,7 @@ void main()
 	if (!Vesa::setMode(foundMode | 0x4000))
 	{
 		Vga::print("Could not change vesa mode!");
-		halt();
+		return;
 	}
 
 	Config::parse(bootInfo->config);
@@ -119,8 +115,6 @@ void main()
 		// Vga::print(")\n");
 		// }
 	}
-
-	halt();
 }
 
 // void printEntries(Config::Entry *entries, uint32_t entryCount)
