@@ -42,7 +42,7 @@ USB = /dev/sdb
 
 all: $(ASM_OBJ) out/core.bin
 
-out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ)
+out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ) linker.ld
 	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $^
 
 out/core/%_asm.o: src/core/%.asm
