@@ -1,4 +1,4 @@
-#include "core/vesa.hpp"
+#include "core/vbe.hpp"
 #include "core/types.hpp"
 #include "core/mm.hpp"
 #include "core/vga.hpp"
@@ -6,7 +6,7 @@
 #include "core/bios.hpp"
 #include "core/macros.hpp"
 
-namespace Vesa
+namespace Vbe
 {
 	namespace
 	{

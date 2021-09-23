@@ -2,7 +2,7 @@
 
 #include "core/types.hpp"
 
-namespace Vesa
+namespace Vbe
 {
 	struct Graphics
 	{
