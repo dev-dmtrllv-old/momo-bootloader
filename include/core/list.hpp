@@ -55,7 +55,7 @@ public:
 		return item;
 	}
 
-	void add(T item)
+	T* add(T item)
 	{
 		ListItem<T> *i = MM::alloc<ListItem<T>>(sizeof(ListItem<T>));
 
@@ -75,6 +75,7 @@ public:
 		}
 
 		this->size_++;
+		return &i->data;
 	}
 
 	void remove(size_t index)
