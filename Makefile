@@ -7,12 +7,17 @@ CPP_HEADERS = $(wildcard include/core/*.hpp)
 CPP_OBJ = $(patsubst src/%.cpp,$(OUT_DIR)/%.o,$(CPP_SRCS))
 ASM_CORE_OBJ = $(patsubst src/core/%.asm,$(OUT_DIR)/core/%_asm.o,$(ASM_CORE_SRCS))
 
+MODULE_SRCS = $(wildcard src/modules/*.cpp)
+MODULE_HEADERS = $(wildcard include/modules/*.hpp)
+MODULE_OBJ = $(patsubst src/%.cpp,$(OUT_DIR)/%.mod,$(MODULE_SRCS))
+
 OPTIMIZATION = -O2
 
 TARGET = i686
 
 C_FLAGS = -ffreestanding $(OPTIMIZATION) -g -m16 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
+LD = $(TARGET)-elf-ld
 OBJCPY = $(TARGET)-elf-objcopy
 LD_FLAGS = -nostdlib -nolibc -nostartfiles -g -nodefaultlibs -fno-common -ffreestanding -lgcc $(OPTIMIZATION)
 
@@ -35,18 +40,27 @@ FS2_MOUNT_POINT = part2
 # END Mount options
 
 QEMU = qemu-system-i386
-QEMU_FLAGS = -M pc -no-reboot -m 512M -s -S
+QEMU_FLAGS = -M pc -no-reboot -m 512M
 
 DISK_IMG = out/disk.img
 USB = /dev/sdb
 
-all: $(ASM_OBJ) out/core.bin
+all: $(ASM_OBJ) out/core.bin modules
+
+modules: $(MODULE_OBJ)
+
+
+out/modules/%.mod: src/modules/%.cpp $(MODULE_HEADERS)
+	@mkdir -p $(@D)
+	$(CC) $(C_FLAGS) -fPIC -c $< -o $@.o
+	$(LD) -shared $@.o -o $@
+	rm -rf $@.o
 
 out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ) linker.ld
 	$(CC) -Tlinker.ld -o out/core.elf $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
-	objcopy --only-keep-debug out/core.elf out/core.sym
-	objcopy --strip-debug out/core.elf
-	objcopy -O binary out/core.elf $@
+	$(OBJCPY) --only-keep-debug out/core.elf out/core.sym
+	$(OBJCPY) --strip-debug out/core.elf
+	$(OBJCPY) -O binary out/core.elf $@
 	rm -rf out/core.elf
 
 out/core/%_asm.o: src/core/%.asm
@@ -78,7 +92,7 @@ $(DISK_IMG):
 	sudo mkfs.fat -F 32 $(LOOP_DEV2)
 	sudo losetup -d $(LOOP_DEV2)
 
-write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin
+write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin modules
 	make mount
 	dd bs=1 if=out/mbr.o of=$(DISK_IMG) conv=notrunc status=progress
 	sudo dd bs=1 if=out/boot1.o count=3 of=$(LOOP_DEV1) conv=notrunc
@@ -87,6 +101,8 @@ write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin
 	sudo mkdir $(FS1_MOUNT_POINT)/momo || true
 	sudo cp test-config.cfg $(FS1_MOUNT_POINT)/momo/boot.cfg
 	sudo cp out/core.bin $(FS1_MOUNT_POINT)/momo/core.bin
+	sudo cp out/modules/{} /home/usr/destination/
+	sudo cp out/modules/* $(FS1_MOUNT_POINT)/momo/modules || true
 	make unmount
 
 mount:
@@ -107,7 +123,11 @@ unmount:
 
 run:
 	make write-disk
-	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG)
+
+debug:
+	make write-disk
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S
 
 clear:
 	make clean

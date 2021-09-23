@@ -8,11 +8,12 @@
 #include "core/drive.hpp"
 #include "core/macros.hpp"
 #include "core/boot.hpp"
+#include "core/fs.hpp"
 
 void main()
 {
 	const Boot::Info* const bootInfo = Boot::getInfo();
-	
+
 	Vga::init();
 	Vga::cls();
 
@@ -34,6 +35,19 @@ void main()
 		Vga::print(utoa(pt.entries[i].flags, buf, 16));
 		Vga::print("\n");
 	}
+
+	FS::DriverInfo fat32Info = {
+		.name = "FAT32"
+	};
+
+	FS::DriverInfo ntfsInfo = {
+		.name = "NTFS"
+	};
+
+	FS::registerDriver(&fat32Info);
+	FS::registerDriver(&ntfsInfo);
+
+	FS::test();
 
 	return;
 }

@@ -8,8 +8,20 @@ namespace FS
 
 	struct Context
 	{
+		uint32_t id;
 		LoadSectorFunc loadSector;
 	};
 
-	void registerDriver();
+	struct DriverInfo
+	{
+		const char* name;
+	};
+
+	typedef Context* (*RegisterFunc)(const FS::DriverInfo* const info);
+	typedef void (*UnregisterFunc)(uint32_t id);
+
+	void test();
+
+	Context* registerDriver(const FS::DriverInfo* const info);
+	void unregisterDriver(const uint32_t id);
 };
