@@ -27,3 +27,5 @@ extern "C" void finiGlobalCtors()
 		__fini_array_start[i - 1]();
 }
 
+// used when a pure virtual function cannot be be called
+extern "C" void __cxa_pure_virtual() {  }
