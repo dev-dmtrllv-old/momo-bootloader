@@ -138,7 +138,7 @@ clean:
 	rm -rf $(DISK_IMG)
 	rm -rf *.mem
 
-usb: $(ASM_OBJ) out/core.bin
+usb: $(ASM_OBJ) out/core.bin modules
 # make write-disk
 	sudo umount $(USB) || true
 	sudo umount $(USB)1 || true
@@ -158,9 +158,11 @@ usb: $(ASM_OBJ) out/core.bin
 
 	mkdir temp || true
 	sudo mount /dev/sdb1 temp
-	sudo mkdir temp/momo || true
+	sudo mkdir -p temp/momo || true
+	sudo mkdir -p temp/momo/modules || true
 	sudo cp test-config.cfg temp/momo/boot.cfg
 	sudo cp out/core.bin temp/momo/core.bin
+	sudo cp out/modules/* temp/momo/modules/
 	sync
 	sudo umount temp
 	rmdir temp
