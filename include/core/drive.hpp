@@ -11,10 +11,10 @@ namespace Drive
 		uint8_t startHead;
 		uint8_t startSector; 	// bit 6 - 7 are the 2 upper bits for startCylinder
 		uint8_t startCylinder;
-		uint8_t systemID;	
+		uint8_t systemID;
 		uint8_t endHead;
 		uint8_t endSector; 		// bit 6 - 7 are the 2 upper bits for endCylinder
-		uint8_t endCylinder;	
+		uint8_t endCylinder;
 		uint32_t lba;			// starting LBA of the partition
 		uint32_t sectorCount; 	// number of sectors in the partition
 	} PACKED;
@@ -25,6 +25,6 @@ namespace Drive
 	} PACKED;
 
 	void init(uint32_t bootDriveNumber, uint32_t sectorSize);
-	void getPartitionTable(PartitionTable* pt);
-	void *loadSector(uint64_t lba, void *dest);
+	PartitionTable* getPartitionTable();
+	void* loadSector(uint64_t lba, void* dest);
 };

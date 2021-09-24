@@ -9,6 +9,8 @@
 #include "core/macros.hpp"
 #include "core/boot.hpp"
 #include "core/fs.hpp"
+#include "core/module.hpp"
+#include "core/fat32.hpp"
 
 void main()
 {
@@ -21,9 +23,7 @@ void main()
 
 	Drive::init(bootInfo->bootDriveNumber, bootInfo->sectorSize);
 
-	Drive::PartitionTable pt;
-
-	Drive::getPartitionTable(&pt);
+	Drive::PartitionTable* pt = Drive::getPartitionTable();
 
 	char buf[32];
 
@@ -32,22 +32,25 @@ void main()
 		Vga::print("partition ");
 		Vga::print(utoa(i + 1, buf, 10));
 		Vga::print(" flags:");
-		Vga::print(utoa(pt.entries[i].flags, buf, 16));
+		Vga::print(utoa(pt->entries[i].flags, buf, 16));
+		Vga::print(" flags:");
+		Vga::print(utoa(pt->entries[i].lba, buf, 16));
 		Vga::print("\n");
 	}
 
-	FS::DriverInfo fat32Info = {
-		.name = "FAT32"
-	};
+	FS::init();
 
-	FS::DriverInfo ntfsInfo = {
-		.name = "NTFS"
-	};
+	Module::addCoreModule(loadFat32Module, unloadFat32Module);
+	
+	Module::loadCoreModules();
 
-	FS::registerDriver(&fat32Info);
-	FS::registerDriver(&ntfsInfo);
+	const char* modulePath = "/0/momo/modules/ext2.mod";
 
-	FS::test();
+	size_t fileSize = FS::getFileSize(modulePath);
+
+	void* module = MM::alloc(fileSize);
+
+	FS::loadFile(modulePath, module);
 
 	return;
 }

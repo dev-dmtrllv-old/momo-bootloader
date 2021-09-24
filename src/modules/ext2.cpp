@@ -6,7 +6,7 @@ FS::Context* fsCtx;
 
 MODULE_LOAD(ctx)
 {
-	const FS::DriverInfo info = {
+	FS::DriverInfo info = {
 		.name = "EXT2"
 	};
 	fsCtx = ctx->registerFS(&info);

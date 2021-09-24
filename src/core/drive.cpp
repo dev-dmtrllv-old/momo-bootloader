@@ -20,11 +20,12 @@ namespace Drive
 		} PACKED;
 
 		Dap* dap_;
+		PartitionTable* pt_ = nullptr;
 
 		uint32_t bootDriveNumber_;
 		uint32_t sectorSize_;
 
-		void *tempFileBuffer_;
+		void* tempFileBuffer_;
 	};
 
 	void init(uint32_t bootDriveNumber, uint32_t sectorSize)
@@ -39,11 +40,12 @@ namespace Drive
 		dap_->bufferSegment = static_cast<uint16_t>(reinterpret_cast<uint32_t>(tempFileBuffer_) >> 16);
 		dap_->bufferOffset = static_cast<uint16_t>(reinterpret_cast<uint32_t>(tempFileBuffer_) & 0xFFFF);
 		dap_->lba = 0;
+
 	}
 
 	[[noreturn]] inline void halt() { __asm__ volatile("cli\nhlt"); }
 
-	void *loadSector(uint64_t lba, void *dest)
+	void* loadSector(uint64_t lba, void* dest)
 	{
 		dap_->lba = lba;
 		Bios::Registers regs = {
@@ -55,11 +57,15 @@ namespace Drive
 		return memcpy(dest, tempFileBuffer_, sectorSize_);
 	}
 
-	void getPartitionTable(PartitionTable *pt)
+	PartitionTable* getPartitionTable()
 	{
-		void *tempBuf = MM::alloc(sectorSize_);
-		loadSector(0, tempBuf);
-		memcpy(pt, tempBuf + 0x01BE, sizeof(PartitionTable));
-		MM::free(tempBuf);
+		if (pt_ == nullptr)
+		{
+			void* tempBuf = MM::alloc(sectorSize_);
+			loadSector(0, tempBuf);
+			memcpy(pt_, tempBuf + 0x01BE, sizeof(PartitionTable));
+			MM::free(tempBuf);
+		}
+		return pt_;
 	}
 };

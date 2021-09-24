@@ -6,16 +6,16 @@ template <typename T>
 struct ListItem
 {
 	T data;
-	ListItem<T> *next;
-	ListItem<T> *prev;
+	ListItem<T>* next;
+	ListItem<T>* prev;
 };
 
 template <typename T>
 class List
 {
 private:
-	ListItem<T> *firstItem_;
-	ListItem<T> *lastItem_;
+	ListItem<T>* firstItem_;
+	ListItem<T>* lastItem_;
 	size_t size_;
 
 public:
@@ -23,9 +23,9 @@ public:
 
 	size_t size() { return this->size_; }
 
-	ListItem<T> *getItem(size_t index)
+	ListItem<T>* getItem(size_t index)
 	{
-		ListItem<T> *item;
+		ListItem<T>* item;
 		size_t i;
 
 		if (index > size_ / 2)
@@ -59,7 +59,7 @@ public:
 
 	T* add(T item)
 	{
-		ListItem<T> *i = MM::alloc<ListItem<T>>(sizeof(ListItem<T>));
+		ListItem<T>* i = MM::alloc<ListItem<T>>(sizeof(ListItem<T>));
 
 		i->data = item;
 		i->next = nullptr;
@@ -84,14 +84,14 @@ public:
 	{
 		if (index == 0)
 		{
-			const ListItem<T> *item = this->firstItem_;
+			const ListItem<T>* item = this->firstItem_;
 			this->firstItem_ = this->firstItem_->next;
-			MM::free(reinterpret_cast<void *>(const_cast<ListItem<T> *>(item)));
+			MM::free(reinterpret_cast<void*>(const_cast<ListItem<T> *>(item)));
 			this->size_--;
 		}
 		else
 		{
-			const ListItem<T> *item = getItem(index);
+			const ListItem<T>* item = getItem(index);
 			if (item != nullptr)
 			{
 				if (!item->prev && !item->next)
@@ -114,7 +114,7 @@ public:
 					item->prev->next = item->next;
 					item->next->prev = item->prev;
 				}
-				MM::free(reinterpret_cast<void *>(const_cast<ListItem<T> *>(item)));
+				MM::free(reinterpret_cast<void*>(const_cast<ListItem<T> *>(item)));
 			}
 		}
 	}
@@ -122,7 +122,7 @@ public:
 	template<typename Callback>
 	void forEach(Callback callback)
 	{
-		const ListItem<T> *item = this->firstItem_;
+		const ListItem<T>* item = this->firstItem_;
 		size_t i = 0;
 		while (item != nullptr)
 		{
@@ -130,5 +130,20 @@ public:
 			i++;
 			item = item->next;
 		}
+	}
+
+	template<typename Callback>
+	const T* find(Callback callback)
+	{
+		const ListItem<T>* item = this->firstItem_;
+		size_t i = 0;
+		while (item != nullptr)
+		{
+			if (callback(&item->data, i))
+				return &item->data;
+			i++;
+			item = item->next;
+		}
+		return nullptr;
 	}
 };

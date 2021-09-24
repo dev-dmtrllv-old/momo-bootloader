@@ -57,7 +57,7 @@ out/modules/%.mod: src/modules/%.cpp $(MODULE_HEADERS)
 	rm -rf $@.o
 
 out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ) linker.ld
-	$(CC) -Tlinker.ld -o out/core.elf $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
+	$(CC) -Tlinker.ld -o out/core.elf -Wl,--export-dynamic $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
 	$(OBJCPY) --only-keep-debug out/core.elf out/core.sym
 	$(OBJCPY) --strip-debug out/core.elf
 	$(OBJCPY) -O binary out/core.elf $@
@@ -98,11 +98,11 @@ write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin modules
 	sudo dd bs=1 if=out/boot1.o count=3 of=$(LOOP_DEV1) conv=notrunc
 	sudo dd bs=1 skip=$(BOOT_OFFSET) if=out/boot1.o iflag=skip_bytes of=$(LOOP_DEV1) seek=$(BOOT_OFFSET) conv=notrunc
 	sudo dd bs=1 seek=1024 if=out/boot2.o iflag=skip_bytes of=$(LOOP_DEV1) conv=notrunc
-	sudo mkdir $(FS1_MOUNT_POINT)/momo || true
+	sudo mkdir -p $(FS1_MOUNT_POINT)/momo || true
+	sudo mkdir -p $(FS1_MOUNT_POINT)/momo/modules || true
 	sudo cp test-config.cfg $(FS1_MOUNT_POINT)/momo/boot.cfg
 	sudo cp out/core.bin $(FS1_MOUNT_POINT)/momo/core.bin
-	sudo cp out/modules/{} /home/usr/destination/
-	sudo cp out/modules/* $(FS1_MOUNT_POINT)/momo/modules || true
+	sudo cp out/modules/* $(FS1_MOUNT_POINT)/momo/modules/
 	make unmount
 
 mount:
