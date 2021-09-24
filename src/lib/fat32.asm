@@ -9,8 +9,8 @@ fat32_init: ; eax = file systems LBA
 	add ax, word [bpb_reserved_sectors]				; add reserved sectors
 	xor ecx, ecx
 	xor edx, edx
-	mov cl, [bpb_sectors_per_cluster]
 	add eax, [fat32_fs_lba]							; add the file system start sector
+	;; eax == root dir lba
 	
 	push eax
 	xor ecx, ecx									; calculate cluster 0 lba

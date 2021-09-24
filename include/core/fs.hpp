@@ -6,8 +6,8 @@
 namespace FS
 {
 	typedef void *(*LoadSectorFunc)(uint64_t, void *);
-	typedef void* (*LoadFileFunc)(const char* path, void* dest);
-	typedef size_t (*FileSizeFunc)(const char* path);
+	typedef void* (*LoadFileFunc)(Drive::PartitionEntry* entry, const char* path, void* dest);
+	typedef size_t (*FileSizeFunc)(Drive::PartitionEntry* entry, const char* path);
 	typedef bool (*CanDriveFunc)(Drive::PartitionEntry* entry);
 
 	struct Context

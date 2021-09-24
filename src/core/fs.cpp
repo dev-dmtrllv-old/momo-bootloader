@@ -19,8 +19,8 @@ namespace FS
 
 		FS::DriverInfo* partitions_[4];
 
-		void* loadFileNotImplemented(const char* path, void* dest) { return nullptr; }
-		size_t getFileSizeNotImplemented(const char* path) { return 0; }
+		void* loadFileNotImplemented(Drive::PartitionEntry* e, const char* path, void* dest) { return nullptr; }
+		size_t getFileSizeNotImplemented(Drive::PartitionEntry* e, const char* path) { return 0; }
 		bool canDriveNotImplemented(Drive::PartitionEntry* e) { return false; }
 
 		uint32_t driverCounter_;
@@ -116,7 +116,7 @@ namespace FS
 		{
 			FS::DriverInfo* driver = getDriverForPartition(ptIndex);
 			if(driver != nullptr)
-				return driver->getFileSize(path[0] == '/' ? &path[3] : &path[2]);
+				return driver->getFileSize(&Drive::getPartitionTable()->entries[ptIndex], path[0] == '/' ? &path[3] : &path[2]);
 		}
 
 		return 0;
@@ -129,7 +129,7 @@ namespace FS
 		{
 			FS::DriverInfo* driver = getDriverForPartition(ptIndex);
 			if(driver != nullptr)
-				return driver->loadFile(path[0] == '/' ? &path[3] : &path[2], dest);
+				return driver->loadFile(&Drive::getPartitionTable()->entries[ptIndex], path, dest);
 		}
 		return nullptr;
 	}
