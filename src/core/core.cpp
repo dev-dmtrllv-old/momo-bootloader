@@ -16,24 +16,24 @@ void main()
 	Vga::init();
 	Vga::cls();
 
-	MM::init(bootInfo->memMap, bootInfo->memMapSize);
+	// MM::init(bootInfo->memMap, bootInfo->memMapSize);
 
-	Drive::init(bootInfo->bootDriveNumber, bootInfo->sectorSize);
+	// Drive::init(bootInfo->bootDriveNumber, bootInfo->sectorSize);
 
-	Drive::PartitionTable pt;
+	// Drive::PartitionTable pt;
 
-	Drive::getPartitionTable(&pt);
+	// Drive::getPartitionTable(&pt);
 
-	char buf[32];
+	// char buf[32];
 
-	for (size_t i = 0; i < 4; i++)
-	{
-		Vga::print("partition ");
-		Vga::print(utoa(i + 1, buf, 10));
-		Vga::print(" flags:");
-		Vga::print(utoa(pt.entries[i].flags, buf, 16));
-		Vga::print("\n");
-	}
+	// for (size_t i = 0; i < 4; i++)
+	// {
+	// 	Vga::print("partition ");
+	// 	Vga::print(utoa(i + 1, buf, 10));
+	// 	Vga::print(" flags:");
+	// 	Vga::print(utoa(pt.entries[i].flags, buf, 16));
+	// 	Vga::print("\n");
+	// }
 
 	return;
 }

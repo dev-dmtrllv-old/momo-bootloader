@@ -3,7 +3,7 @@ OUTPUT_ARCH(i386)
 ENTRY(start)
 SECTIONS
 {
-	. = 0x3000;
+	. = 0x2000;
 
 	__coreBinaryStart = .;
 
