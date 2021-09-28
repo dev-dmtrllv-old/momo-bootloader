@@ -1,11 +1,13 @@
 OUT_DIR = out
 INCL_DIR = include
 
-CPP_SRCS = $(wildcard src/core/*.cpp)
+CPP_CORE_SRCS = $(wildcard src/core/*.cpp)
 ASM_CORE_SRCS = $(wildcard src/core/*.asm)
-CPP_HEADERS = $(wildcard include/core/*.hpp)
-CPP_OBJ = $(patsubst src/%.cpp,$(OUT_DIR)/%.o,$(CPP_SRCS))
-ASM_CORE_OBJ = $(patsubst src/core/%.asm,$(OUT_DIR)/core/%_asm.o,$(ASM_CORE_SRCS))
+CPP_CORE_HEADERS = $(wildcard include/core/*.hpp)
+CPP_CORE_OBJS = $(patsubst src/%.cpp,$(OUT_DIR)/%.o,$(CPP_CORE_SRCS))
+ASM_CORE_OBJS = $(patsubst src/core/%.asm,$(OUT_DIR)/core/%_asm.o,$(ASM_CORE_SRCS))
+CORE_BIOS_SRCS = $(wildcard src/core/bios/*.asm)
+CORE_BIOS_OBJS = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(CORE_BIOS_SRCS))
 
 OPTIMIZATION = -O2
 
@@ -16,10 +18,10 @@ CC = $(TARGET)-elf-g++
 OBJCPY = $(TARGET)-elf-objcopy
 LD_FLAGS = -nostdlib -nolibc -nostartfiles -nodefaultlibs -fno-common -ffreestanding -lgcc $(OPTIMIZATION)
 
-ASM_SRCS = $(wildcard src/boot/*.asm)
-ASM_INCLUDE_DIR = src/boot/lib
-ASM_INCLUDE_FILES = $(wildcard $(ASM_INCLUDE_DIR)/*.asm)
-ASM_OBJ = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(ASM_SRCS))
+ASM_BOOT_SRCS = $(wildcard src/boot/*.asm)
+ASM_BOOT_INCL_DIR = src/boot/lib
+ASM_BOOT_INCL_FILES = $(wildcard $(ASM_BOOT_INCL_DIR)/*.asm)
+ASM_BOOT_OBJS = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(ASM_BOOT_SRCS))
 
 BOOT_OFFSET = 90
 
@@ -40,25 +42,35 @@ QEMU_FLAGS = -M pc -no-reboot -m 512M -no-shutdown
 DISK_IMG = out/disk.img
 USB = /dev/sdb
 
-all: $(ASM_OBJ) out/core.bin
 
-$(CPP_OBJ): $(CPP_SRCS) linker.ld
-$(ASM_CORE_OBJ): $(ASM_CORE_SRCS) linker.ld
+all: $(ASM_BOOT_OBJS) out/core.bin
 
-out/core.bin: $(CPP_OBJ) $(ASM_CORE_OBJ) linker.ld
-	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $(CPP_OBJ) $(ASM_CORE_OBJ)
+
+$(ASM_BOOT_SRCS): $(ASM_BOOT_INCL_FILES)
+$(CPP_CORE_OBJS): $(CPP_CORE_SRCS)
+$(ASM_CORE_OBJS): $(ASM_CORE_SRCS)
+
+
+out/boot/%.o: src/boot/%.asm $(ASM_BOOT_SRCS) $(ASM_BOOT_INCL_FILES)
+	@mkdir -p $(@D)
+	nasm -f bin $< -isrc/boot -o $@ $(NASM_DEFINES)
+
+
+out/core.bin: $(CPP_CORE_OBJS) $(ASM_CORE_OBJS) $(CORE_BIOS_OBJS) linker.ld
+	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $(CPP_CORE_OBJS) $(ASM_CORE_OBJS) $(CORE_BIOS_OBJS)
 
 out/core/%_asm.o: src/core/%.asm
 	@mkdir -p $(@D)
 	nasm -f elf32 $< -o $@
 
-out/boot/%.o: src/boot/%.asm $(ASM_SRCS) $(ASM_INCLUDE_FILES)
+out/core/bios/%.o: src/core/bios/%.asm
 	@mkdir -p $(@D)
-	nasm -f bin $< -isrc/boot -o $@ $(NASM_DEFINES)
+	nasm -f elf32 $< -o $@
 
-out/%.o: src/%.cpp $(CPP_HEADERS)
+out/core/%.o: src/core/%.cpp $(CPP_CORE_HEADERS)
 	@mkdir -p $(@D)
 	$(CC) $(C_FLAGS) -c $< -o $@
+
 
 $(DISK_IMG):
 	@mkdir -p $(@D)
@@ -77,7 +89,8 @@ $(DISK_IMG):
 	sudo mkfs.fat -F 32 $(LOOP_DEV2)
 	sudo losetup -d $(LOOP_DEV2)
 
-write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin
+
+write-disk: $(DISK_IMG) $(ASM_BOOT_OBJS) out/core.bin
 	make mount
 	dd bs=1 if=out/boot/mbr.o of=$(DISK_IMG) conv=notrunc status=progress
 	sudo dd bs=1 if=out/boot/boot1.o count=3 of=$(LOOP_DEV1) conv=notrunc
@@ -88,6 +101,7 @@ write-disk: $(DISK_IMG) $(ASM_OBJ) out/core.bin
 	sudo cp out/core.bin $(FS1_MOUNT_POINT)/momo/core.bin
 	make unmount
 
+
 mount:
 	sudo losetup -o $(PART1_OFF) $(LOOP_DEV1) $(DISK_IMG)
 	sudo losetup -o $(PART2_OFF) $(LOOP_DEV2) $(DISK_IMG)
@@ -96,6 +110,7 @@ mount:
 	sudo mkdir $(FS2_MOUNT_POINT)
 	sudo mount $(LOOP_DEV2) $(FS2_MOUNT_POINT)
 	
+
 unmount:
 	sudo umount $(FS1_MOUNT_POINT) || true
 	sudo umount $(FS2_MOUNT_POINT) || true
@@ -104,20 +119,24 @@ unmount:
 	sudo rmdir $(FS1_MOUNT_POINT) || true
 	sudo rmdir $(FS2_MOUNT_POINT) || true
 
+
 run:
 	make write-disk
 	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
 
+
 clear:
 	make clean
 	clear
+
 
 clean:
 	rm -rf out
 	rm -rf $(DISK_IMG)
 	rm -rf *.mem
 
-usb: $(ASM_OBJ) out/core.bin
+
+usb: $(ASM_BOOT_OBJS) out/core.bin
 # make write-disk
 	sudo umount $(USB) || true
 	sudo umount $(USB)1 || true
@@ -143,7 +162,7 @@ usb: $(ASM_OBJ) out/core.bin
 	sync
 	sudo umount temp
 	rmdir temp
-	
+
 test-usb: usb
 	sleep 1
 	sudo $(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(USB)
