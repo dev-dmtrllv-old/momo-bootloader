@@ -42,8 +42,8 @@ get_mem_list:
 mem_cpy: ; esi = src, edi = dest, ecx = size
 	cmp ecx, 0
 	je .done
-	mov al, [esi]
-	mov [edi], al
+	mov al, byte [esi]
+	mov byte [edi], al
 	inc esi
 	inc edi
 	dec ecx

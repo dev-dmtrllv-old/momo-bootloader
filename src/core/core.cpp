@@ -1,56 +1,27 @@
-#include "core/vga.hpp"
-#include "core/keyboard.hpp"
-#include "core/config.hpp"
-#include "core/string.hpp"
-#include "core/mm.hpp"
-#include "core/ascii.hpp"
-#include "core/vbe.hpp"
-#include "core/drive.hpp"
-#include "core/macros.hpp"
-#include "core/boot.hpp"
-#include "core/fs.hpp"
-#include "core/module.hpp"
-#include "core/fat32.hpp"
+#include "core/bios.hpp"
+
+void write(const char* str)
+{
+	unsigned char* vgaMem = reinterpret_cast<unsigned char*>(0xB8000);
+	while(*str != '\0')
+	{
+		*vgaMem++ = *str++;
+		vgaMem++;
+	}
+}
 
 void main()
 {
-	const Boot::Info* const bootInfo = Boot::getInfo();
+	write("Hello, World!");
+	Bios::Registers regs = {
+		.eax = 0,
+		.ebx = 0,
+		.ecx = 0,
+		.edx = 0,
+		.esi = 0,
+		.edi = 0,
+	};
+	call_bios_routine(&bios_test, &regs);
 
-	Vga::init();
-	Vga::cls();
-
-	MM::init(bootInfo->memMap, bootInfo->memMapSize);
-
-	Drive::init(bootInfo->bootDriveNumber, bootInfo->sectorSize);
-
-	Drive::PartitionTable* pt = Drive::getPartitionTable();
-
-	char buf[32];
-
-	for (size_t i = 0; i < 4; i++)
-	{
-		Vga::print("partition ");
-		Vga::print(utoa(i + 1, buf, 10));
-		Vga::print(" flags:");
-		Vga::print(utoa(pt->entries[i].flags, buf, 16));
-		Vga::print(" flags:");
-		Vga::print(utoa(pt->entries[i].lba, buf, 16));
-		Vga::print("\n");
-	}
-
-	FS::init();
-
-	Module::addCoreModule(loadFat32Module, unloadFat32Module);
-	
-	Module::loadCoreModules();
-
-	const char* modulePath = "/0/momo/modules/ext2.mod";
-
-	size_t fileSize = FS::getFileSize(modulePath);
-
-	void* module = MM::alloc(fileSize);
-
-	FS::loadFile(modulePath, module);
-
-	return;
+	write("...done!");
 }

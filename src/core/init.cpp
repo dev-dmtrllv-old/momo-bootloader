@@ -1,6 +1,7 @@
-#include "core/vga.hpp"
+// #include "core/vga.hpp"
+#include "core/macros.hpp"
 
-extern "C" void start () __attribute__((section(".text.entry")));
+extern "C" void start () SECTION(".text.entry");
 
 extern void main();
 extern "C" void initGlobalCtors();
@@ -8,12 +9,12 @@ extern "C" void finiGlobalCtors();
 
 [[noreturn]] inline void halt() { __asm__ volatile("cli\nhlt"); halt(); }
 
-extern "C" void start ()
+void start ()
 {
 	initGlobalCtors();
 	main();
-	Vga::print("\n[core exit]\n");
+	// Vga::print("\n[core exit]\n");
 	finiGlobalCtors();
-	Vga::print("[halted]\n");
+	// Vga::print("[halted]\n");
 	halt();
 }

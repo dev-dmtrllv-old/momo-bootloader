@@ -2,8 +2,8 @@
 
 #include "core/types.hpp"
 
-extern const void *__coreBinaryStart;
-extern const void *__coreBinaryEnd;
+extern const void* __coreBinaryStart;
+extern const void* __coreBinaryEnd;
 
 namespace CoreInfo
 {

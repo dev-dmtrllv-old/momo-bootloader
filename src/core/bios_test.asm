@@ -1,0 +1,18 @@
+[bits 16]
+
+section .bios
+
+global bios_test
+
+bios_test:
+	mov al, 'X'
+	mov ah, 0x0e
+	int 0x10
+	int 0x10
+	int 0x10
+	int 0x10
+	int 0x10
+	int 0x10
+	int 0x10
+	int 0x10
+	ret

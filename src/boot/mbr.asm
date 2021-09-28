@@ -22,7 +22,7 @@ start:
 	jmp 0:relocated_start
 
 relocated_start:
-	mov [bpb_drive], dl							; set the drive number
+	mov [bpb_drive], dl						; set the drive number
 
 	call check_drive_ext
 	jc drive_ext_fail

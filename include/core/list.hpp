@@ -1,7 +1,5 @@
 #pragma once
 
-#include <core/mm.hpp>
-
 template <typename T>
 struct ListItem
 {
@@ -130,20 +128,5 @@ public:
 			i++;
 			item = item->next;
 		}
-	}
-
-	template<typename Callback>
-	const T* find(Callback callback)
-	{
-		const ListItem<T>* item = this->firstItem_;
-		size_t i = 0;
-		while (item != nullptr)
-		{
-			if (callback(&item->data, i))
-				return &item->data;
-			i++;
-			item = item->next;
-		}
-		return nullptr;
 	}
 };
