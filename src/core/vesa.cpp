@@ -22,7 +22,7 @@ namespace Vesa
 			return vgaMemAddr + (((row * vgaColumns) + column) * 2);
 		}
 
-
+		bool isInitialized_ = false;
 		uint16_t cursorOffset_ = 0;
 		uint8_t colorAttr_ = 0;
 		Color foreground_;
@@ -76,18 +76,26 @@ namespace Vesa
 
 	void init(Color foreground, Color background)
 	{
-		Bios::Registers regs = {};
-		call_bios_routine(&bios_get_cursor_position, &regs);
+		if (!isInitialized_)
+		{
+			Bios::Registers regs = {};
+			call_bios_routine(&bios_get_cursor_position, &regs);
 
-		uint8_t row = Bios::higherReg(regs.dx);
-		uint8_t col = Bios::lowerReg(regs.dx);
+			uint8_t row = Bios::higherReg(regs.dx);
+			uint8_t col = Bios::lowerReg(regs.dx);
 
-		cursorOffset_ = (row * vgaColumns) + col;
+			cursorOffset_ = (row * vgaColumns) + col;
 
-		foreground_ = foreground;
-		background_ = background;
+			foreground_ = foreground;
+			background_ = background;
 
-		colorAttr_ = combineColors(foreground, background);
+			colorAttr_ = combineColors(foreground, background);
+			isInitialized_ = true;
+		}
+		else
+		{
+			WARN("Vesa driver is already initialized...");
+		}
 	}
 
 	void init()
@@ -98,18 +106,24 @@ namespace Vesa
 
 	void setColor(Color foreground)
 	{
+		if (!isInitialized_)
+			return;
 		foreground_ = foreground;
 		colorAttr_ = combineColors(foreground_, background_);
 	}
 
 	void setBackground(Color background)
 	{
+		if (!isInitialized_)
+			return;
 		background_ = background;
 		colorAttr_ = combineColors(foreground_, background_);
 	}
 
 	void setColors(Color foreground, Color background)
 	{
+		if (!isInitialized_)
+			return;
 		foreground_ = foreground;
 		background_ = background;
 		colorAttr_ = combineColors(foreground_, background_);
@@ -117,11 +131,16 @@ namespace Vesa
 
 	void write(const char* str)
 	{
+		if (!isInitialized_)
+			return;
+			
 		setCursorPos(writeAt(str, cursorOffset_));
 	}
 
 	void writeLine(const char* str)
 	{
+		if (!isInitialized_)
+			return;
 		uint16_t off = writeAt(str, cursorOffset_);
 
 		off = ((off / vgaColumns) + 1) * vgaColumns;
@@ -137,6 +156,9 @@ namespace Vesa
 
 	uint16_t writeAt(const char* str, uint16_t offset)
 	{
+		if (!isInitialized_)
+			return 0;
+
 		VgaMem vgaMem = getVgaMemAddr(offset);
 
 		uint16_t newOffset = offset;
@@ -187,6 +209,8 @@ namespace Vesa
 
 	void write(const char* str, Color fg, Color bg)
 	{
+		if (!isInitialized_)
+			return;
 		uint8_t savedColor = colorAttr_;
 		colorAttr_ = combineColors(fg, bg);
 		write(str);
@@ -195,6 +219,8 @@ namespace Vesa
 
 	void writeLine(const char* str, Color fg, Color bg)
 	{
+		if (!isInitialized_)
+			return;
 		uint8_t savedColor = colorAttr_;
 		colorAttr_ = combineColors(fg, bg);
 		writeLine(str);
@@ -203,6 +229,8 @@ namespace Vesa
 
 	void clear()
 	{
+		if (!isInitialized_)
+			return;
 		for (size_t i = 0; i < vgaColumns * vgaRows; i++)
 			writeAt(" ", i);
 		setCursorPos(0);
