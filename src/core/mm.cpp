@@ -9,7 +9,6 @@ namespace MM
 {
 	namespace
 	{
-
 		struct BiosMemoryEntry
 		{
 			uint64_t base;
@@ -18,12 +17,14 @@ namespace MM
 			uint32_t acpiFlag;
 		} PACKED;
 
-		enum Types
+		struct RealModeMemoryEntry
 		{
-			LOW,
-			HIGH,
-			SIZE
-		};
+			uint16_t base;
+			uint16_t size;
+			bool isFree;
+		} PACKED;
+
+
 
 		constexpr size_t biosAddr = 0x2000;
 		constexpr size_t biosSize = 0xE000;
@@ -43,9 +44,53 @@ namespace MM
 		constexpr size_t highBitmapSize = align(highBitmapCount * sizeof(int));
 		constexpr size_t highBitmapPagesCount = highBitmapSize / pageSize;
 
-		bool isInitialized_ = false;
 
+
+		bool isInitialized_ = false;
 		uint32_t* bitmapPtr_ = nullptr;
+		RealModeMemoryEntry* realModeMemoryList_ = nullptr;
+		size_t maxRealModeEntries_ = 0;
+
+		RealModeMemoryEntry* findFreeEntry()
+		{
+			size_t index = 0;
+			while (index < maxRealModeEntries_)
+			{
+				if (realModeMemoryList_[index].size == 0)
+					return &realModeMemoryList_[index];
+				index++;
+			}
+			ERROR("Could not get a free real mode memory entry!");
+			return nullptr;
+		}
+
+		RealModeMemoryEntry* addRealModeEntry(uint16_t base, uint16_t size, bool isFree)
+		{
+			RealModeMemoryEntry* e = findFreeEntry();
+			if (e != nullptr)
+			{
+				e->base = base;
+				e->size = size;
+				e->isFree = isFree;
+			}
+			else
+			{
+				ERROR("add real mode entry fail...");
+			}
+			return e;
+		}
+
+		RealModeMemoryEntry* findRealModeEntry(uint32_t address)
+		{
+			size_t index = 0;
+			while (index < maxRealModeEntries_)
+			{
+				if (realModeMemoryList_[index].base == address)
+					return &realModeMemoryList_[index];
+				index++;
+			}
+			return nullptr;
+		}
 
 		void setBitmap(uint32_t* bitmap, size_t offset, bool free)
 		{
@@ -66,7 +111,7 @@ namespace MM
 			const uint32_t s = (pageSize * bitmapIntSize);
 			const uint32_t index = a / s;
 			const uint32_t offset = (a % s) / pageSize;
-			
+
 			if (free)
 				bitmapPtr_[index] &= ~(1UL << offset);
 			else
@@ -104,11 +149,10 @@ namespace MM
 			call_bios_routine(&bios_get_mem_map, &regs);
 
 			const uint32_t minBitMapAddr = align(CoreInfo::getBinaryEndAddr());
-			
+
 			// find a free place to store the bit maps
 			for (size_t i = 0; i < regs.cx; i++)
 			{
-
 				if (biosMemBuf[i].usedFlag == 1)
 				{
 					const uint32_t b = align(biosMemBuf[i].base);
@@ -134,15 +178,25 @@ namespace MM
 				if (biosMemBuf[i].usedFlag != 1)
 				{
 					uint32_t b = alignDown(biosMemBuf[i].base);
-					const uint32_t t = align(biosMemBuf[i].base + biosMemBuf[i].size);
-					for (b; b < t; b += pageSize)
-						if(b >= minBitMapAddr)
+					if (b >= minBitMapAddr)
+					{
+						const uint32_t t = align(biosMemBuf[i].base + biosMemBuf[i].size);
+						for (b; b < t; b += pageSize)
 							setBitmapAtAddr(b, false);
+					}
 				}
 			}
 
-			for(size_t base = alignDown(CoreInfo::getBinaryStartAddr()), top = align(CoreInfo::getBinaryEndAddr()); base < top; base += 0x1000)
+			for (size_t base = alignDown(CoreInfo::getBinaryStartAddr()), top = align(CoreInfo::getBinaryEndAddr()); base < top; base += 0x1000)
 				setBitmapAtAddr(base, false);
+
+
+			realModeMemoryList_ = reinterpret_cast<RealModeMemoryEntry*>(getPage());
+			maxRealModeEntries_ = pageSize / sizeof(RealModeMemoryEntry);
+
+			// bufAddr was used for the bios memory map, and points to the end of the real mode code
+			addRealModeEntry(0x0, bufAddr, false);
+			addRealModeEntry(bufAddr, biosTopAddr - bufAddr, true);
 
 			isInitialized_ = true;
 		}
@@ -155,11 +209,11 @@ namespace MM
 	void* getPage()
 	{
 		size_t index = 0;
-		while(bitmapPtr_[index] != 0xFFFFFFFF)
+		while (bitmapPtr_[index] != 0xFFFFFFFF)
 		{
-			for(uint8_t i = 0; i < bitmapIntSize; i++)
+			for (uint8_t i = 0; i < bitmapIntSize; i++)
 			{
-				if(isBitmapFree(&bitmapPtr_[index], i))
+				if (isBitmapFree(&bitmapPtr_[index], i))
 				{
 					setBitmap(&bitmapPtr_[index], i, false);
 					return reinterpret_cast<void*>(bitmapToAddr(index, i));
@@ -172,5 +226,104 @@ namespace MM
 	void freePage(void* address)
 	{
 		setBitmapAtAddr(reinterpret_cast<uint32_t>(address), true);
+	}
+
+	void* allocRealModeBuffer(size_t size)
+	{
+		size_t index = 0;
+		while (index < maxRealModeEntries_)
+		{
+			uint16_t b = realModeMemoryList_[index].base;
+			uint16_t s = realModeMemoryList_[index].size;
+			uint16_t t = b + (s - 1);
+
+			if (s == 0 || !realModeMemoryList_[index].isFree || s < size)
+			{
+				index++;
+				continue;
+			}
+
+			if (s == size)
+			{
+				realModeMemoryList_[index].isFree = false;
+
+				char buf[16];
+				utoa(b, buf, 16);
+				Vesa::write(buf);
+				Vesa::write(" : ");
+
+				utoa(s, buf, 16);
+				Vesa::writeLine(buf);
+			}
+			else
+			{
+				// split the block
+				realModeMemoryList_[index].size -= size;
+				RealModeMemoryEntry* e = addRealModeEntry(b + realModeMemoryList_[index].size, size, false);
+				return reinterpret_cast<void*>(e->base);
+			}
+
+			index++;
+		}
+		return nullptr;
+	}
+
+	void freeRealModeBuffer(void* buffer)
+	{
+		RealModeMemoryEntry* e = findRealModeEntry(reinterpret_cast<uint32_t>(buffer));
+		
+		if (e != nullptr)
+		{
+			size_t index = 0;
+			
+			// find a free block where we can merge on top off
+			while (index < maxRealModeEntries_)
+			{
+				if (realModeMemoryList_[index].size == 0 || !realModeMemoryList_[index].isFree)
+				{
+					index++;
+					continue;
+				}
+				else if (realModeMemoryList_[index].base + realModeMemoryList_[index].size == e->base)
+				{
+					// merge with block at index
+					realModeMemoryList_[index].size += e->size;
+					e->size = 0;
+					e->base = 0;
+					e->isFree = false;
+					return;
+				}
+				index++;
+			}
+
+			index = 0;
+			while (index < maxRealModeEntries_)
+			{
+				if (realModeMemoryList_[index].size == 0 || !realModeMemoryList_[index].isFree)
+				{
+					index++;
+					continue;
+				}
+				else if (realModeMemoryList_[index].base == e->base + e->size)
+				{
+					// merge with block at index
+					realModeMemoryList_[index].size += e->size;
+					realModeMemoryList_[index].base -= e->size;
+					e->size = 0;
+					e->base = 0;
+					e->isFree = false;
+					return;
+				}
+				index++;
+			}
+
+			// else simply set the isFree flag to true
+			e->isFree = true;
+		}
+		else
+		{
+			WARN("Could not free real mode buffer!");
+		}
+
 	}
 };
