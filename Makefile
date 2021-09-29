@@ -13,7 +13,7 @@ OPTIMIZATION = -O2
 
 TARGET = i686
 
-C_FLAGS = -ffreestanding $(OPTIMIZATION) -m32 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
+C_FLAGS = -ffreestanding $(OPTIMIZATION) -g -m32 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
 OBJCPY = $(TARGET)-elf-objcopy
 LD_FLAGS = -nostdlib -nolibc -nostartfiles -nodefaultlibs -fno-common -ffreestanding -lgcc $(OPTIMIZATION)
@@ -42,9 +42,7 @@ QEMU_FLAGS = -M pc -no-reboot -m 512M -no-shutdown
 DISK_IMG = out/disk.img
 USB = /dev/sdb
 
-
 all: $(ASM_BOOT_OBJS) out/core.bin
-
 
 $(ASM_BOOT_SRCS): $(ASM_BOOT_INCL_FILES)
 $(CPP_CORE_OBJS): $(CPP_CORE_SRCS)
@@ -57,15 +55,20 @@ out/boot/%.o: src/boot/%.asm $(ASM_BOOT_SRCS) $(ASM_BOOT_INCL_FILES)
 
 
 out/core.bin: $(CPP_CORE_OBJS) $(ASM_CORE_OBJS) $(CORE_BIOS_OBJS) linker.ld
-	$(CC) -Tlinker.ld -o $@ $(LD_FLAGS) $(CPP_CORE_OBJS) $(ASM_CORE_OBJS) $(CORE_BIOS_OBJS)
+	$(CC) -Tlinker.ld -o out/core.elf $(LD_FLAGS) $(CPP_CORE_OBJS) $(ASM_CORE_OBJS) $(CORE_BIOS_OBJS)
+	$(OBJCPY) --only-keep-debug out/core.elf out/core.sym
+	$(OBJCPY) --strip-debug out/core.elf
+	$(OBJCPY) -O binary out/core.elf $@
+	rm -rf out/core.elf
+
 
 out/core/%_asm.o: src/core/%.asm
 	@mkdir -p $(@D)
-	nasm -f elf32 $< -o $@
+	nasm -f elf32 -g $< -o $@
 
 out/core/bios/%.o: src/core/bios/%.asm
 	@mkdir -p $(@D)
-	nasm -f elf32 $< -o $@
+	nasm -f elf32 -g $< -o $@
 
 out/core/%.o: src/core/%.cpp $(CPP_CORE_HEADERS)
 	@mkdir -p $(@D)
@@ -124,6 +127,9 @@ run:
 	make write-disk
 	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
 
+debug:
+	make write-disk
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S 
 
 clear:
 	make clean
