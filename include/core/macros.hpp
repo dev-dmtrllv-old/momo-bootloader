@@ -9,7 +9,7 @@
 #define INFO_COLOR Vesa::Color::CYAN
 #endif
 #ifndef WARN_COLOR
-#define WARN_COLOR Vesa::Color::YELLOW
+#define WARN_COLOR Vesa::Color::MAGENTA
 #endif
 #ifndef ERROR_COLOR
 #define ERROR_COLOR Vesa::Color::LIGHT_RED
@@ -23,3 +23,4 @@ Vesa::writeLine(msg);
 
 #define ERROR(msg) Vesa::write("[ERROR] ", ERROR_COLOR, Vesa::Color::BLACK);\
 Vesa::writeLine(msg);
+
