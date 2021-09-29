@@ -9,7 +9,7 @@ ASM_CORE_OBJS = $(patsubst src/core/%.asm,$(OUT_DIR)/core/%_asm.o,$(ASM_CORE_SRC
 CORE_BIOS_SRCS = $(wildcard src/core/bios/*.asm)
 CORE_BIOS_OBJS = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(CORE_BIOS_SRCS))
 
-OPTIMIZATION = -O2
+OPTIMIZATION = -O0
 
 TARGET = i686
 

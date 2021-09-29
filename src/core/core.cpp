@@ -1,36 +1,50 @@
 #include "core/bios.hpp"
+#include "core/mm.hpp"
 
 void write(const char* str)
 {
-	unsigned char* vgaMem = reinterpret_cast<unsigned char*>(0xB8000);
+	Bios::Registers regs = {};
+	call_bios_routine(&bios_get_cursor_position, &regs);
+	
+	uint8_t row = Bios::higherReg(regs.dx);
+	uint8_t col = Bios::lowerReg(regs.dx);
+
+	uint16_t offset = (row * 80) + col;
+	
+	unsigned char* vgaMem = reinterpret_cast<unsigned char*>(0xB8000 + (offset * 2));
 	while (*str != '\0')
 	{
-		*vgaMem++ = *str++;
-		vgaMem++;
+		if(*str == '\n')
+		{
+			offset = ((offset / 80) + 1) * 80;
+			vgaMem = reinterpret_cast<unsigned char*>(0xB8000 + (offset * 2));
+			*str++;
+		}
+		else
+		{
+			*vgaMem++ = *str++;
+			vgaMem++;
+			offset++;
+		}
 	}
+
+	regs.bx = 0;
+	regs.dx = Bios::combineReg(offset % 80, offset / 80);
+
+	call_bios_routine(&bios_set_cursor_position, &regs);
+}
+
+void writeLine(const char* str)
+{
+	write(str);
+	write("\n");
 }
 
 void main()
 {
-	write("Hello, World!");
+	writeLine("Hello, World!");
 
-	// ; ax = lba low
-	// ; bx = lba high
-	// ; si = buffer address
-	// ; di = buffer segment
-	// ; cx = number of sectors
-	// ; dx = drive number
-	Bios::Registers regs = {
-		.ax = 0x00,
-		.bx = 0x00,
-		.cx = 0x1,
-		.dx = 0x80,
-		.di = 0x0,
-		.si = 0x5000,
-	};
+	MM::init();
 
-	// call_bios_routine(reinterpret_cast<void(*)()>(0x12345678), reinterpret_cast<Bios::Registers*>(0x66666666));
-	call_bios_routine(&bios_read_sectors, &regs);
-
-	write("done");
+	writeLine("done");
 }

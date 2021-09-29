@@ -2,19 +2,23 @@ OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386)
 ENTRY(start)
 SECTIONS
-{
-
-	__coreBinaryStart = .;
-	
+{	
 	. = 0x2000;
 	
+
+	__biosBinaryStart = .;
+
 	.bios :
 	{
 		*(.bios)	
 	}
+	
+	__biosBinaryEnd = .;
 
 	. = 0x10000;
-	
+
+	__coreBinaryStart = .;
+
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text.entry)

@@ -29,3 +29,4 @@ BIOS_ROUTINE(bios_read_sectors);
 BIOS_ROUTINE(bios_get_video_mode);
 BIOS_ROUTINE(bios_set_cursor_position);
 BIOS_ROUTINE(bios_get_cursor_position);
+BIOS_ROUTINE(bios_get_mem_map);
