@@ -236,6 +236,9 @@ load_dir_entry: ; eax = roor dir cluster number, ebx = entry string to match
 		jmp .load_file_cluster
 
 load_file_done:
+	mov ax, word [drive_number]
+	mov word [BOOT_INFO_ADDR], ax
+
 	mov ebp, 0x2000 - 8
 	mov esp, ebp
 

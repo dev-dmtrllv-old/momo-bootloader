@@ -2,6 +2,8 @@
 %define BOOT1_ADDR						0x7C00
 %define BOOT2_ADDR						0x1000
 
+%define BOOT_INFO_ADDR					0x1000
+
 %define CORE_LOAD_ADDR					0x2000
 %define CORE_ENTRY_ADDR					0x10000
 

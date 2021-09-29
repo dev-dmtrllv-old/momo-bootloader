@@ -3,7 +3,7 @@
 
 extern "C" void start () SECTION(".text.entry");
 
-extern void main();
+extern void main(uint16_t bootDriveNumber);
 extern "C" void initGlobalCtors();
 extern "C" void finiGlobalCtors();
 
@@ -11,8 +11,10 @@ extern "C" void finiGlobalCtors();
 
 void start ()
 {
+	uint16_t bootDriveNumber = *reinterpret_cast<uint16_t*>(0x1000);
+
 	initGlobalCtors();
-	main();
+	main(bootDriveNumber);
 	// Vga::print("\n[core exit]\n");
 	finiGlobalCtors();
 	// Vga::print("[halted]\n");
