@@ -22,6 +22,13 @@ namespace Vesa
 			return vgaMemAddr + (((row * vgaColumns) + column) * 2);
 		}
 
+
+		uint16_t cursorOffset_ = 0;
+		uint8_t colorAttr_ = 0;
+		Color foreground_;
+		Color background_;
+
+
 		VgaMem getVgaMemAddr(uint32_t offset)
 		{
 			return reinterpret_cast<unsigned char*>(vgaMemAddrWithOffset(offset));
@@ -32,11 +39,14 @@ namespace Vesa
 			return reinterpret_cast<unsigned char*>(vgaMemAddrWithOffset(row, column));
 		}
 
-		uint16_t cursorOffset = 0;
+		inline uint8_t combineColors(Color fg, Color bg)
+		{
+			return (static_cast<uint8_t>(bg) << 4) | static_cast<uint8_t>(fg);
+		}
 
 		void setCursorPos(uint16_t row, uint16_t column)
 		{
-			cursorOffset = (row * vgaColumns) + column;
+			cursorOffset_ = (row * vgaColumns) + column;
 			Bios::Registers regs = {};
 			regs.dx = Bios::combineReg(column, row);
 			regs.bx = 0;
@@ -59,12 +69,12 @@ namespace Vesa
 
 			VgaMem vgaMem = getVgaMemAddr(vgaRows - 1, 0);
 
-			for (size_t i = 0; i < vgaColumns; i ++)
+			for (size_t i = 0; i < vgaColumns; i++)
 				vgaMem[i * 2] = ' ';
 		}
 	};
 
-	void init()
+	void init(Color foreground, Color background)
 	{
 		Bios::Registers regs = {};
 		call_bios_routine(&bios_get_cursor_position, &regs);
@@ -72,27 +82,56 @@ namespace Vesa
 		uint8_t row = Bios::higherReg(regs.dx);
 		uint8_t col = Bios::lowerReg(regs.dx);
 
-		cursorOffset = (row * vgaColumns) + col;
+		cursorOffset_ = (row * vgaColumns) + col;
+
+		foreground_ = foreground;
+		background_ = background;
+
+		colorAttr_ = combineColors(foreground, background);
+	}
+
+	void init()
+	{
+		init(Color::LIGHT_GRAY, Color::BLACK);
+	}
+
+
+	void setColor(Color foreground)
+	{
+		foreground_ = foreground;
+		colorAttr_ = combineColors(foreground_, background_);
+	}
+
+	void setBackground(Color background)
+	{
+		background_ = background;
+		colorAttr_ = combineColors(foreground_, background_);
+	}
+
+	void setColors(Color foreground, Color background)
+	{
+		foreground_ = foreground;
+		background_ = background;
+		colorAttr_ = combineColors(foreground_, background_);
 	}
 
 	void write(const char* str)
 	{
-		uint16_t off = writeAt(str, cursorOffset);
-		setCursorPos(off);
+		setCursorPos(writeAt(str, cursorOffset_));
 	}
 
 	void writeLine(const char* str)
 	{
-		uint16_t off = writeAt(str, cursorOffset);
-		
+		uint16_t off = writeAt(str, cursorOffset_);
+
 		off = ((off / vgaColumns) + 1) * vgaColumns;
-		
+
 		if (off >= vgaColumns * vgaRows)
 		{
 			scroll();
 			off = vgaColumns * (vgaRows - 1);
 		}
-		
+
 		setCursorPos(off);
 	}
 
@@ -117,7 +156,7 @@ namespace Vesa
 				for (uint8_t i = 0; i < spaces; i++)
 				{
 					*vgaMem++ = ' ';
-					*vgaMem++;
+					*vgaMem++ = colorAttr_;
 				}
 				*str++;
 				offset += spaces;
@@ -125,7 +164,7 @@ namespace Vesa
 			else
 			{
 				*vgaMem++ = *str++;
-				vgaMem++;
+				*vgaMem++ = colorAttr_;
 				newOffset++;
 			}
 
@@ -143,6 +182,23 @@ namespace Vesa
 	uint16_t writeAt(const char* str, uint16_t row, uint16_t column)
 	{
 		return writeAt(str, (row * vgaColumns) + column);
+	}
+
+
+	void write(const char* str, Color fg, Color bg)
+	{
+		uint8_t savedColor = colorAttr_;
+		colorAttr_ = combineColors(fg, bg);
+		write(str);
+		colorAttr_ = savedColor;
+	}
+
+	void writeLine(const char* str, Color fg, Color bg)
+	{
+		uint8_t savedColor = colorAttr_;
+		colorAttr_ = combineColors(fg, bg);
+		writeLine(str);
+		colorAttr_ = savedColor;
 	}
 
 	void clear()
