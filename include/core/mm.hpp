@@ -23,7 +23,9 @@ namespace MM
 			return n;
 		return (n / alignment) * alignment;
 	}
-	
+
 	void* getPage();
 	void freePage(void* address);
+	void* allocRealModeBuffer(size_t size);
+	void freeRealModeBuffer(void* buffer);
 };
