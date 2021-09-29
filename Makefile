@@ -47,7 +47,7 @@ all: $(ASM_BOOT_OBJS) out/core.bin
 $(ASM_BOOT_SRCS): $(ASM_BOOT_INCL_FILES)
 $(CPP_CORE_OBJS): $(CPP_CORE_SRCS)
 $(ASM_CORE_OBJS): $(ASM_CORE_SRCS)
-
+$(CORE_BIOS_OBJS): $(CORE_BIOS_OBJS)
 
 out/boot/%.o: src/boot/%.asm $(ASM_BOOT_SRCS) $(ASM_BOOT_INCL_FILES)
 	@mkdir -p $(@D)
