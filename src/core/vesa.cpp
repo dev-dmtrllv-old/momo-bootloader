@@ -161,8 +161,6 @@ namespace Vesa
 
 		VgaMem vgaMem = getVgaMemAddr(offset);
 
-		uint16_t newOffset = offset;
-
 		while (*str != '\0')
 		{
 			if (*str == '\n')
@@ -187,7 +185,7 @@ namespace Vesa
 			{
 				*vgaMem++ = *str++;
 				*vgaMem++ = colorAttr_;
-				newOffset++;
+				offset++;
 			}
 
 			if (offset >= vgaColumns * vgaRows)
@@ -198,7 +196,7 @@ namespace Vesa
 			}
 		}
 
-		return newOffset;
+		return offset;
 	}
 
 	uint16_t writeAt(const char* str, uint16_t row, uint16_t column)
