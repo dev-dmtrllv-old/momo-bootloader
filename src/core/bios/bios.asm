@@ -13,21 +13,10 @@ call_bios_routine:
 	
 	mov ebp, esp
 	mov eax, [ebp + 40] ; registers address
-	mov ebp, eax
-	
-	mov ax, word [ebp + 0]
-	mov bx, word [ebp + 2]
-	mov cx, word [ebp + 4]
-	mov dx, word [ebp + 6]
-	mov di, word [ebp + 8]
-	mov si, word [ebp + 10]
-
-	mov word [bios_routine_registers + 0], ax
-	mov word [bios_routine_registers + 2], bx
-	mov word [bios_routine_registers + 4], cx
-	mov word [bios_routine_registers + 6], dx
-	mov word [bios_routine_registers + 8], di
-	mov word [bios_routine_registers + 10], si
+	mov esi, eax
+	mov edi, bios_routine_registers
+	mov ecx, 12
+	rep movsb
 
 	jmp word 0x18:pm_16
 
@@ -76,6 +65,13 @@ rm_16:
 
 	call ebp
 	
+	mov word [bios_routine_registers + 0], ax
+	mov word [bios_routine_registers + 2], bx
+	mov word [bios_routine_registers + 4], cx
+	mov word [bios_routine_registers + 6], dx
+	mov word [bios_routine_registers + 8], di
+	mov word [bios_routine_registers + 10], si
+
 	cli
 
 	mov eax, cr0
@@ -96,6 +92,13 @@ bios_routine_done:
 	mov ss, ax
 	
 	cld
+
+	mov ebp, dword [sp_ptr]
+	mov eax, [ebp + 40] ; registers address
+	mov esi, bios_routine_registers
+	mov edi, eax
+	mov ecx, 12
+	rep movsb
 
 	mov ebp, dword [sp_ptr]
 	mov esp, ebp
