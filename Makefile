@@ -42,12 +42,15 @@ QEMU_FLAGS = -M pc -no-reboot -m 512M -no-shutdown
 DISK_IMG = out/disk.img
 USB = /dev/sdb
 
-all: $(ASM_BOOT_OBJS) out/core.bin
+all: $(ASM_BOOT_OBJS) out/core.bin $(DISK_IMG)
+
+disk:
+	make write-disk
 
 $(ASM_BOOT_SRCS): $(ASM_BOOT_INCL_FILES)
-$(CPP_CORE_OBJS): $(CPP_CORE_SRCS)
-$(ASM_CORE_OBJS): $(ASM_CORE_SRCS)
-$(CORE_BIOS_OBJS): $(CORE_BIOS_SRCS)
+$(CPP_CORE_OBJS): $(CPP_CORE_SRCS) $(CPP_CORE_HEADERS)
+$(ASM_CORE_OBJS): $(ASM_CORE_SRCS) $(CPP_CORE_HEADERS)
+$(CORE_BIOS_OBJS): $(CORE_BIOS_SRCS) $(CPP_CORE_HEADERS)
 
 out/boot/%.o: src/boot/%.asm $(ASM_BOOT_SRCS) $(ASM_BOOT_INCL_FILES)
 	@mkdir -p $(@D)
@@ -123,13 +126,11 @@ unmount:
 	sudo rmdir $(FS2_MOUNT_POINT) || true
 
 
-run:
-	make write-disk
+run: disk
 	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
 
-debug:
-	make write-disk
-	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S 
+debug: disk
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S
 
 clear:
 	make clean
