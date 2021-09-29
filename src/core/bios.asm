@@ -7,9 +7,27 @@ global call_bios_routine
 call_bios_routine:
 	cli
 	pusha
-
+	
 	mov dword [sp_ptr], esp
 	mov dword [bp_ptr], ebp
+	
+	mov ebp, esp
+	mov eax, [ebp + 40] ; registers address
+	mov ebp, eax
+	
+	mov ax, word [ebp + 0]
+	mov bx, word [ebp + 2]
+	mov cx, word [ebp + 4]
+	mov dx, word [ebp + 6]
+	mov di, word [ebp + 8]
+	mov si, word [ebp + 10]
+
+	mov word [bios_routine_registers + 0], ax
+	mov word [bios_routine_registers + 2], bx
+	mov word [bios_routine_registers + 4], cx
+	mov word [bios_routine_registers + 6], dx
+	mov word [bios_routine_registers + 8], di
+	mov word [bios_routine_registers + 10], si
 
 	jmp word 0x18:pm_16
 
@@ -36,12 +54,27 @@ rm_16:
 	mov gs, ax
 	mov ss, ax
 
+	cld
+
+	mov ebp, [esp + 36]
+	
+	mov eax, ebp
+
+	mov bp, bios_stack + 0x200
+	mov sp, bp
+
+	mov ebp, eax
+
+	mov ax, word [bios_routine_registers + 0]
+	mov bx, word [bios_routine_registers + 2]
+	mov cx, word [bios_routine_registers + 4]
+	mov dx, word [bios_routine_registers + 6]
+	mov di, word [bios_routine_registers + 8]
+	mov si, word [bios_routine_registers + 10]
+	
 	sti
 
-	mov eax, [esp + 36]
-	mov ebx, [esp + 40]
-
-	call eax
+	call ebp
 	
 	cli
 
@@ -72,6 +105,19 @@ bios_routine_done:
 
 	ret
 
+align 4
 
-sp_ptr:		dd 0x0
-bp_ptr:		dd 0x0
+sp_ptr:				dd 0x0
+bp_ptr:				dd 0x0
+
+bios_routine_registers:
+	.ax:			dw 0x0
+	.bx:			dw 0x0
+	.cx:			dw 0x0
+	.dx:			dw 0x0
+	.di:			dw 0x0
+	.si:			dw 0x0
+bios_routine_registers_end:
+
+bios_stack:
+	times 0x200 db 0

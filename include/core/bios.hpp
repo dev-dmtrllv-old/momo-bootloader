@@ -5,16 +5,17 @@
 
 namespace Bios
 {
-	struct Registers
+	struct alignas(8) Registers
 	{
-		uint32_t eax;
-		uint32_t ebx;
-		uint32_t ecx;
-		uint32_t edx;
-		uint32_t esi;
-		uint32_t edi;
-	};
+		uint16_t ax;
+		uint16_t bx;
+		uint16_t cx;
+		uint16_t dx;
+		uint16_t di;
+		uint16_t si;
+	} PACKED;
 };
 
 extern "C" void call_bios_routine(void (* routine)(), Bios::Registers* registers);
 extern "C" void bios_test();
+extern "C" void bios_read_sectors();
