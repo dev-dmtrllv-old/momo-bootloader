@@ -31,6 +31,10 @@ namespace Vesa
 	void setBackground(Color color);
 	void setColors(Color foreground, Color background);
 
+	uint16_t getCursorOffset();
+	void setCursorOffset(uint16_t offset);
+	void setCursorOffset(uint16_t row, uint16_t column);
+
 	void write(const char* str);
 	void writeLine(const char* str);
 	uint16_t writeAt(const char* str, uint16_t offset);

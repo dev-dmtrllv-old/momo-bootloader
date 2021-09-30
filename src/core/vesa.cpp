@@ -129,6 +129,21 @@ namespace Vesa
 		colorAttr_ = combineColors(foreground_, background_);
 	}
 
+	uint16_t getCursorOffset()
+	{
+		return cursorOffset_;
+	}
+
+	void setCursorOffset(uint16_t offset)
+	{
+		setCursorPos(offset);
+	}
+
+	void setCursorOffset(uint16_t row, uint16_t column)
+	{
+		setCursorPos(row, column);
+	}
+
 	void write(const char* str)
 	{
 		if (!isInitialized_)
