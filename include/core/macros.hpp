@@ -24,3 +24,4 @@ Vesa::writeLine(msg);
 #define ERROR(msg) Vesa::write("[ERROR] ", ERROR_COLOR, Vesa::Color::BLACK);\
 Vesa::writeLine(msg);
 
+#define INT_STR_BUFFER "\0\0\0\0\0\0\0\0\0\0"
