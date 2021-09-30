@@ -4,6 +4,7 @@
 #include "core/string.hpp"
 #include "core/macros.hpp"
 #include "core/disk.hpp"
+#include "core/fs.hpp"
 
 void main(uint16_t bootDriveNumber)
 {
@@ -17,14 +18,32 @@ void main(uint16_t bootDriveNumber)
 
 	INFO("initializing disk driver...");
 	Disk::init(bootDriveNumber);
+	
+	INFO("initializing filesystems...");
+	FS::init();
 
-	const Disk::PartitionTable* const pt = Disk::getPartitionTable();
+	FS::PathInfo pi;
 
-	char buf[16];
+	const char* path = "/0/momo/boot.cfg"; 
 
-	for (size_t i = 0; i < 4; i++)
+	if(!FS::getPathInfo(&pi, path))
 	{
-		utoa(pt->partitions[i].lba, buf, 16);
-		INFO(buf);
+		ERROR("OOPS could not get path info!");
+	}
+	else
+	{
+		Vesa::write("Found file ");
+		Vesa::write(path);
+		Vesa::write(" of ");
+		char buf[16];
+		utoa(pi.size, buf, 10);
+		Vesa::write(buf);
+		Vesa::writeLine(" bytes...");
+	
+		void* file = MM::getPage();
+		FS::readFile(path, file);
+		utoa(reinterpret_cast<uint32_t>(file), buf, 16);
+		Vesa::write("File buffer at address: ");
+		Vesa::writeLine(buf);
 	}
 }
