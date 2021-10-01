@@ -51,4 +51,5 @@ namespace Ascii
 	uint32_t toInt(char c);
 	uint32_t strToInt(char* str);
 	void toUpperCase(char* str);
+	void toLowerCase(char* str);
 };
