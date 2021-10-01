@@ -9,7 +9,6 @@ namespace Disk
 {
 	namespace
 	{
-		constexpr uint16_t dapSectorSize = 0x200;
 		constexpr uint16_t partitionTableOffset = 0x01BE;
 
 		bool isInitialized_ = false;
