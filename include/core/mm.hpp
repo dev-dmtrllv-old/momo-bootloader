@@ -25,7 +25,9 @@ namespace MM
 	}
 
 	void* getPage();
+	void* getPages(size_t bytes, size_t* numberOfPages);
 	void freePage(void* address);
+	void freePages(void* address, size_t numberOfPages);
 	void* allocRealModeBuffer(size_t size);
 	void freeRealModeBuffer(void* buffer);
 };

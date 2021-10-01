@@ -206,26 +206,84 @@ namespace MM
 		}
 	}
 
-	void* getPage()
+	void* getPages(size_t bytes, size_t* numberOfPages)
 	{
-		size_t index = 0;
-		while (bitmapPtr_[index] != 0xFFFFFFFF)
+		const size_t totalNeedePages = MM::align(bytes) / MM::pageSize;
+		*numberOfPages = totalNeedePages;
+
+		size_t startIndex = 0;
+
+		size_t freePageStartIndex = 0;
+		size_t freePagestartOffset = 0;
+		size_t foundFreePages = 0;
+
+		for (size_t index = 0; index < highBitmapCount; index++)
 		{
-			for (uint8_t i = 0; i < bitmapIntSize; i++)
+			if(bitmapPtr_[index] == 0xFFFFFFFF)
 			{
-				if (isBitmapFree(&bitmapPtr_[index], i))
+				foundFreePages = 0;
+			}
+			else
+			{
+				for (uint8_t i = 0; i < bitmapIntSize; i++)
 				{
-					setBitmap(&bitmapPtr_[index], i, false);
-					return reinterpret_cast<void*>(bitmapToAddr(index, i));
+					if (isBitmapFree(&bitmapPtr_[index], i))
+					{
+						if(foundFreePages == 0)
+						{
+							freePagestartOffset = i;
+							freePageStartIndex = index;
+						}
+						foundFreePages++;
+
+						if(foundFreePages >= totalNeedePages)
+						{
+							uint32_t startAddr = bitmapToAddr(index, i);
+							for(size_t j = 0; j < totalNeedePages; j++)
+								setBitmapAtAddr(startAddr + (i*MM::pageSize), false);
+
+							return reinterpret_cast<void*>(startAddr); 
+						}
+					}
+					else
+					{
+						foundFreePages = 0;
+					}
 				}
 			}
-			index++;
 		}
+		return nullptr;
+
+	}
+
+	void* getPage()
+	{
+		for (size_t index = 0; index < highBitmapCount; index++)
+		{
+			if(bitmapPtr_[index] != 0xFFFFFFFF)
+			{
+				for (uint8_t i = 0; i < bitmapIntSize; i++)
+				{
+					if (isBitmapFree(&bitmapPtr_[index], i))
+					{
+						setBitmap(&bitmapPtr_[index], i, false);
+						return reinterpret_cast<void*>(bitmapToAddr(index, i));
+					}
+				}
+			}
+		}
+		return nullptr;
 	}
 
 	void freePage(void* address)
 	{
 		setBitmapAtAddr(reinterpret_cast<uint32_t>(address), true);
+	}
+
+	void freePages(void* address, size_t pages)
+	{
+		for(size_t i = 0; i < pages; i++)
+			setBitmapAtAddr(reinterpret_cast<uint32_t>(address + (i * MM::pageSize)), true);
 	}
 
 	void* allocRealModeBuffer(size_t size)
@@ -271,11 +329,11 @@ namespace MM
 	void freeRealModeBuffer(void* buffer)
 	{
 		RealModeMemoryEntry* e = findRealModeEntry(reinterpret_cast<uint32_t>(buffer));
-		
+
 		if (e != nullptr)
 		{
 			size_t index = 0;
-			
+
 			// find a free block where we can merge on top off
 			while (index < maxRealModeEntries_)
 			{
