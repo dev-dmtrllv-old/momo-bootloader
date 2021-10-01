@@ -88,4 +88,21 @@ namespace FS
 
 		return d->readFile(&path[2], file);
 	}
+
+	void readDir(const char* path, ReadDirCallback callback)
+	{
+		if (path[0] == '/' || path[0] == ':')
+			path++;
+
+		uint16_t partitionIndex = Ascii::toInt(path[0]);
+
+		FS::Driver* d = partitions_[partitionIndex];
+		if (d == nullptr)
+		{
+			ERROR("NO DRIVER INSTALLED FOR PARTITION");
+			return;
+		}
+
+		return d->readDir(&path[2], callback);
+	}
 };
