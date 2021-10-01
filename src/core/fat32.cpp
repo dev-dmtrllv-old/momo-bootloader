@@ -74,14 +74,15 @@ namespace FS
 
 	uint32_t Fat32::getNextCluster(uint32_t clusterNumber)
 	{
-		const uint16_t i = this->sectorSize_ / 4;
+		const uint16_t i = Disk::dapSectorSize / 4;
 		const uint16_t fatLba = (clusterNumber / i) + this->fatLba_;
 
 		void* buf = MM::getPage();
+
 		Disk::readSectors(buf, fatLba, 1);
 
 		const uint16_t offset = clusterNumber % i;
-		const uint32_t newClusterNumber = *reinterpret_cast<uint32_t*>(buf + offset);
+		const uint32_t newClusterNumber = reinterpret_cast<uint32_t*>(buf)[offset];
 
 		MM::freePage(buf);
 
@@ -130,9 +131,16 @@ namespace FS
 
 	void* Fat32::loadCluster(uint32_t lba, void* dest)
 	{
-		size_t clusterSize = this->clusterSize_ * this->sectorSize_;
-		for (size_t i = 0; i < clusterSize / 512; i++)
-			Disk::readSectors(dest + (i * 512), lba + i, 1);
+		size_t sectors = this->clusterSize_ * this->sectorSize_ / Disk::dapSectorSize;
+		for (size_t i = 0; i < sectors; i++)
+		{
+			// char b [16];
+			// Vesa::write(utoa(lba + i, b, 16));
+			// Vesa::write(" : ");
+			// Vesa::writeLine(utoa(reinterpret_cast<uint32_t>(dest + (i * Disk::dapSectorSize)), b, 16));
+			// WARN();
+			Disk::readSectors(dest + (i * Disk::dapSectorSize), lba + i, 1);
+		}
 		return dest;
 	}
 
