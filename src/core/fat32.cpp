@@ -8,6 +8,17 @@
 
 namespace FS
 {
+	enum class Attributes
+	{
+		READ_ONLY = 0x01,
+		HIDDEN = 0x02,
+		SYSTEM = 0x04,
+		VOLUME_ID = 0x08,
+		DIRECTORY = 0x10,
+		ARCHIVE = 0x20,
+		LONG_FILENAME = 0x0F,
+	};
+
 	namespace BPBOffsets
 	{
 		constexpr uint16_t bytesPerSector = 0xB;
@@ -21,6 +32,7 @@ namespace FS
 
 	constexpr uint32_t invalidClusterNum = 0xFFFFFFFF;
 	constexpr uint32_t endOfCluster = 0x0FFFFFF8;
+	constexpr uint32_t lfnStringSize = 13;
 
 	uint32_t Fat32::clusterToLba(uint32_t clusterNumber)
 	{
@@ -54,6 +66,7 @@ namespace FS
 		this->fatLba_ = lba + bpbInfo.reservedSectors;
 		this->rootDirLba_ = this->fatLba_ + (bpbInfo.numberOfFats * bpbInfo.sectorsPerFat);
 		this->dataLba_ = this->rootDirLba_ - (bpbInfo.rootDirCluster * this->clusterSize_);
+		this->rootDirEntries_ = this->clusterSize_ * this->sectorSize_ / 32;
 
 		MM::freePage(bpbBuffer);
 	}
@@ -127,29 +140,30 @@ namespace FS
 	{
 		void* entries = MM::getPage();
 
-		const size_t numOfEntries = this->clusterSize_ * this->sectorSize_ / 32;
-
 		// load all other root dir clusters...
 		while (clusterNum < endOfCluster)
 		{
+			uint32_t lba = clusterToLba(clusterNum);
 
-			loadCluster(clusterToLba(clusterNum), reinterpret_cast<void*>(entries));
-
-			for (size_t i = 0; i < numOfEntries; i++)
+			for (size_t s = 0; s < this->clusterSize_; s++)
 			{
-				RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(entries + (i * 32));
+				Disk::readSectors(entries, lba++, 1);
 
-				if (strncmp(entry->name, str, 11) == 0)
+				for (size_t i = 0; i < this->rootDirEntries_; i++)
 				{
-					uint32_t c = (entry->highClusterNum << 16) | entry->lowClusterNum;
-					entryInfo->clusterNumber = c;
-					entryInfo->isDir = entry->fileSize == 0;
-					entryInfo->size = entry->fileSize;
-					MM::freePage(entries);
-					return true;
+					RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(entries + (i * 32));
+
+					if (strncmp(entry->name, str, 11) == 0)
+					{
+						uint32_t c = (entry->highClusterNum << 16) | entry->lowClusterNum;
+						entryInfo->clusterNumber = c;
+						entryInfo->isDir = entry->fileSize == 0;
+						entryInfo->size = entry->fileSize;
+						MM::freePage(entries);
+						return true;
+					}
 				}
 			}
-
 			clusterNum = getNextCluster(clusterNum);
 		}
 
@@ -224,14 +238,14 @@ namespace FS
 	void Fat32::readFile(const char* path, void* dest)
 	{
 		EntryInfo entry;
-		
+
 		if (!getEntryInfo(&entry, path))
 			return;
 
 		uint32_t destAddr = reinterpret_cast<uint32_t>(dest);
 		uint32_t c = entry.clusterNumber;
-		
-		while(c < endOfCluster)
+
+		while (c < endOfCluster)
 		{
 			this->loadCluster(clusterToLba(c), reinterpret_cast<void*>(destAddr));
 			destAddr += this->clusterSize_ * this->sectorSize_;
@@ -242,5 +256,92 @@ namespace FS
 	void Fat32::readDir(const char* path, void* dest, size_t maxItems)
 	{
 
+	}
+
+	void Fat32::readDir(const char* path, ReadDirCallback callback)
+	{
+		EntryInfo entry;
+
+		if (strcmp(const_cast<char*>(path), "/") == 0)
+		{
+			entry.clusterNumber = lbaToCluster(rootDirLba_);
+		}
+		else if (!getEntryInfo(&entry, path))
+		{
+			return;
+		}
+
+		uint32_t c = entry.clusterNumber;
+
+		void* buf = MM::getPage();
+
+		PathInfo pi;
+
+		while (c < endOfCluster)
+		{
+			uint32_t lba = clusterToLba(c);
+
+			for (size_t s = 0; s < this->clusterSize_; s++)
+			{
+				Disk::readSectors(buf, lba++, 1);
+
+				for (size_t i = 0; i < this->rootDirEntries_; i++)
+				{
+					RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(buf + (i * 32));
+
+					if (entry->attributes != Attribute::NONE && entry->attributes != Attribute::LONG_FILENAME)
+					{
+						pi.isDirectory = entry->fileSize == 0;
+						pi.size = entry->fileSize;
+
+						char name[13];
+						char ext[4];
+
+						memset(name, 0, 13);
+						memset(ext, 0, 4);
+
+						size_t spaces = 0;
+						for (size_t i = 0; i < 11; i++)
+						{
+							const char c = entry->name[i];
+
+							if (i < 8)
+							{
+								if (c == ' ')
+								{
+									spaces++;
+								}
+								else
+								{
+									if (spaces > 0)
+									{
+										memset(&name[i - spaces], ' ', spaces);
+										spaces = 0;
+									}
+									name[i] = c;
+								}
+							}
+							else if (c != ' ')
+							{
+								ext[i - 8] = c;
+							}
+						}
+
+						if (strlen(ext) > 0)
+						{
+							name[strlen(name)] = '.';
+							memcpy(&name[strlen(name)], ext, 4);
+						}
+
+						Ascii::toLowerCase(name);
+						callback(name, pi);
+					}
+				}
+			}
+
+			c = getNextCluster(c);
+		}
+
+		MM::freePage(buf);
 	}
 };

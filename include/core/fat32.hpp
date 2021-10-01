@@ -18,16 +18,40 @@ namespace FS
 			uint32_t rootDirCluster;
 		} PACKED;
 
+		enum class Attribute : uint8_t
+		{
+			NONE = 0x0,
+			READ_ONLY = 0x01,
+			HIDDEN = 0x02,
+			SYSTEM = 0x04,
+			VOLUME_ID = 0x08,
+			DIRECTORY = 0x10,
+			ARCHIVE = 0x20,
+			LONG_FILENAME = 0x0F,
+		};
+
 		struct RootDirEntry
 		{
 			char name[11];
-			char attributes;
+			Attribute attributes;
 			char unused[8];
 			uint16_t highClusterNum;
 			uint16_t modifiedTime;
 			uint16_t modifiedDate;
 			uint16_t lowClusterNum;
 			uint32_t fileSize; // subdir == 0x0	
+		} PACKED;
+
+		struct LfnEntry
+		{
+			uint8_t index;
+			char firstPart[10];
+			Attribute attributes;
+			uint8_t type;
+			uint8_t checksum;
+			char secondPart[12];
+			char zero[2];
+			char thirdPart[4];
 		} PACKED;
 
 	public:
@@ -44,6 +68,7 @@ namespace FS
 		uint32_t fatLba_;
 		uint32_t clusterSize_; // size in sectors
 		uint32_t sectorSize_; // size in bytes
+		uint32_t rootDirEntries_;
 
 		uint32_t clusterToLba(uint32_t clusterNumber);
 		uint32_t lbaToCluster(uint32_t lba);
@@ -62,5 +87,6 @@ namespace FS
 		bool getPathInfo(FS::PathInfo* info, const char* path) override;
 		void readFile(const char* path, void* dest) override;
 		void readDir(const char* path, void* dest, size_t maxItems) override;
+		void readDir(const char* path, ReadDirCallback callback) override;
 	};
 };
