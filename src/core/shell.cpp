@@ -145,6 +145,8 @@ namespace Shell
 			}
 		}
 
+
+
 		int changeDir(char* dir)
 		{
 			if (strcmp(dir, ".") == 0)
@@ -255,12 +257,29 @@ namespace Shell
 			});
 
 			registerCommand("echo", [](char** argv, size_t argc) {
-				for (size_t i = 0; i < argc - 1; i++)
+				if ((argv[0][0] == '>' || argv[0][0] == '<') && argc >= 2)
 				{
-					Vesa::write(argv[i]);
-					Vesa::write(" ");
+					FS::PathInfo pi;
+					if (FS::getPathInfo(&pi, argv[1]))
+					{
+						size_t numberOfPages = 0;
+						void* fileBuf = MM::getPages(pi.size, &numberOfPages);
+						
+						if (FS::readFile(argv[1], fileBuf))
+							Vesa::writeLine(reinterpret_cast<char*>(fileBuf));
+
+						MM::freePages(fileBuf, numberOfPages);
+					}
 				}
-				Vesa::writeLine(argv[argc - 1]);
+				else
+				{
+					for (size_t i = 0; i < argc - 1; i++)
+					{
+						Vesa::write(argv[i]);
+						Vesa::write(" ");
+					}
+					Vesa::writeLine(argv[argc - 1]);
+				}
 				return 0;
 			});
 
