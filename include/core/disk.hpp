@@ -5,6 +5,8 @@
 
 namespace Disk
 {
+	constexpr uint16_t dapSectorSize = 0x200;
+	
 	struct PartitionEntry
 	{
 		uint8_t flags;			// 0x80 = bootable
