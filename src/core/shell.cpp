@@ -269,6 +269,33 @@ namespace Shell
 				return 0;
 			});
 
+			registerCommand("ls", [](char** argv, size_t argc) {
+				FS::readDir(cwd_, [](const char* name, const FS::PathInfo& pi) {
+					Vesa::Color fg;
+					Vesa::Color bg;
+
+					if (pi.isDirectory)
+					{
+						fg = Vesa::Color::YELLOW;
+						bg = Vesa::Color::BLACK;
+					}
+					else
+					{
+						fg = Vesa::Color::LIGHT_BLUE;
+						bg = Vesa::Color::BLACK;
+					}
+
+					const size_t l = strlen(const_cast<char*>(name));
+					const size_t off = 80 - (Vesa::getCursorOffset() % 80);
+					if (off < l)
+						Vesa::writeLine("");
+					Vesa::write(name, fg, bg);
+					Vesa::write(" ");
+				});
+				Vesa::writeLine("");
+				return 0;
+			});
+
 			isInitialized_ = true;
 		}
 	}
@@ -290,7 +317,7 @@ namespace Shell
 
 			while (isRunning_)
 			{
-				Vesa::write(cwd_);
+				Vesa::write(cwd_, Vesa::Color::LIGHT_GREEN, Vesa::Color::BLACK);
 				Vesa::write(" ");
 
 				char* inputBuffer = reinterpret_cast<char*>(buffer_);
