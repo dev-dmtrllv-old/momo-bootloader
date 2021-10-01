@@ -85,7 +85,7 @@ namespace FS
 		void init(uint32_t lba) override;
 
 		bool getPathInfo(FS::PathInfo* info, const char* path) override;
-		void readFile(const char* path, void* dest) override;
+		bool readFile(const char* path, void* dest) override;
 		void readDir(const char* path, void* dest, size_t maxItems) override;
 		void readDir(const char* path, ReadDirCallback callback) override;
 	};

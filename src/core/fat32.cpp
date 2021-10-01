@@ -235,12 +235,12 @@ namespace FS
 		return true;
 	}
 
-	void Fat32::readFile(const char* path, void* dest)
+	bool Fat32::readFile(const char* path, void* dest)
 	{
 		EntryInfo entry;
 
 		if (!getEntryInfo(&entry, path))
-			return;
+			return false;
 
 		uint32_t destAddr = reinterpret_cast<uint32_t>(dest);
 		uint32_t c = entry.clusterNumber;
@@ -251,6 +251,7 @@ namespace FS
 			destAddr += this->clusterSize_ * this->sectorSize_;
 			c = getNextCluster(c);
 		}
+		return true;
 	}
 
 	void Fat32::readDir(const char* path, void* dest, size_t maxItems)

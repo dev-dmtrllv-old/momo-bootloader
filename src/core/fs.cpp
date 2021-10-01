@@ -72,7 +72,7 @@ namespace FS
 		return d->getPathInfo(pathInfo, &path[2]);
 	}
 
-	void readFile(const char* path, void* file)
+	bool readFile(const char* path, void* file)
 	{
 		if (path[0] == '/' || path[0] == ':')
 			path++;
@@ -83,7 +83,7 @@ namespace FS
 		if (d == nullptr)
 		{
 			ERROR("NO DRIVER INSTALLED FOR PARTITION");
-			return;
+			return false;
 		}
 
 		return d->readFile(&path[2], file);

@@ -21,7 +21,7 @@ namespace FS
 
 		virtual void init(uint32_t lba) {  };
 		virtual bool getPathInfo(PathInfo* info, const char* path) = 0;
-		virtual void readFile(const char* path, void* dest) = 0;
+		virtual bool readFile(const char* path, void* dest) = 0;
 		virtual void readDir(const char* path, void* dest, size_t maxItems) = 0;
 		virtual void readDir(const char* path, ReadDirCallback callback) = 0;
 
@@ -33,6 +33,6 @@ namespace FS
 	void loadDriver(size_t partitionIndex, FS::Driver* driver, size_t driverSize);
 
 	bool getPathInfo(FS::PathInfo* pathInfo, const char* str);
-	void readFile(const char* path, void* file);
+	bool readFile(const char* path, void* file);
 	void readDir(const char* path, ReadDirCallback callback);
 };
