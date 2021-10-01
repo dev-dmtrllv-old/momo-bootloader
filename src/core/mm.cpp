@@ -210,46 +210,55 @@ namespace MM
 	{
 		const size_t totalNeedePages = MM::align(bytes) / MM::pageSize;
 		*numberOfPages = totalNeedePages;
-
+		
 		size_t startIndex = 0;
-
-		size_t freePageStartIndex = 0;
-		size_t freePagestartOffset = 0;
-		size_t foundFreePages = 0;
+		size_t startOffset = 0;
+		size_t freePagesCount = 0;
 
 		for (size_t index = 0; index < highBitmapCount; index++)
 		{
-			if(bitmapPtr_[index] == 0xFFFFFFFF)
-			{
-				foundFreePages = 0;
-			}
-			else
+			if (bitmapPtr_[index] != 0xFFFFFFFF)
 			{
 				for (uint8_t i = 0; i < bitmapIntSize; i++)
 				{
 					if (isBitmapFree(&bitmapPtr_[index], i))
 					{
-						if(foundFreePages == 0)
+						if (freePagesCount == 0)
 						{
-							freePagestartOffset = i;
-							freePageStartIndex = index;
-						}
-						foundFreePages++;
+							startIndex = index;
+							startOffset = i;
 
-						if(foundFreePages >= totalNeedePages)
+						}
+
+						freePagesCount++;
+
+						if (freePagesCount == totalNeedePages)
 						{
-							uint32_t startAddr = bitmapToAddr(index, i);
-							for(size_t j = 0; j < totalNeedePages; j++)
-								setBitmapAtAddr(startAddr + (i*MM::pageSize), false);
+							void* buf = reinterpret_cast<void*>(bitmapToAddr(startIndex, startOffset));
 
-							return reinterpret_cast<void*>(startAddr); 
+							for (size_t j = 0; j < totalNeedePages; j++)
+							{
+								setBitmap(&bitmapPtr_[startIndex], startOffset++, false);
+								if (startOffset >= bitmapIntSize)
+								{
+									startOffset = 0;
+									startIndex++;
+								}
+							}
+
+							return buf;
 						}
+
 					}
 					else
 					{
-						foundFreePages = 0;
+						freePagesCount = 0;
 					}
 				}
+			}
+			else
+			{
+				freePagesCount = 0;
 			}
 		}
 		return nullptr;
@@ -260,7 +269,7 @@ namespace MM
 	{
 		for (size_t index = 0; index < highBitmapCount; index++)
 		{
-			if(bitmapPtr_[index] != 0xFFFFFFFF)
+			if (bitmapPtr_[index] != 0xFFFFFFFF)
 			{
 				for (uint8_t i = 0; i < bitmapIntSize; i++)
 				{
@@ -282,7 +291,7 @@ namespace MM
 
 	void freePages(void* address, size_t pages)
 	{
-		for(size_t i = 0; i < pages; i++)
+		for (size_t i = 0; i < pages; i++)
 			setBitmapAtAddr(reinterpret_cast<uint32_t>(address + (i * MM::pageSize)), true);
 	}
 
