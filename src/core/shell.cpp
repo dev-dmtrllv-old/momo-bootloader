@@ -145,8 +145,6 @@ namespace Shell
 			}
 		}
 
-
-
 		int changeDir(char* dir)
 		{
 			if (strcmp(dir, ".") == 0)
@@ -217,6 +215,33 @@ namespace Shell
 
 			return 3;
 		}
+
+		void ls(char* dir)
+		{
+			FS::readDir(dir, [](const char* name, const FS::PathInfo& pi) {
+				Vesa::Color fg;
+				Vesa::Color bg;
+
+				if (pi.isDirectory)
+				{
+					fg = Vesa::Color::YELLOW;
+					bg = Vesa::Color::BLACK;
+				}
+				else
+				{
+					fg = Vesa::Color::LIGHT_BLUE;
+					bg = Vesa::Color::BLACK;
+				}
+
+				const size_t l = strlen(const_cast<char*>(name));
+				const size_t off = 80 - (Vesa::getCursorOffset() % 80);
+				if (off < l)
+					Vesa::writeLine("");
+				Vesa::write(name, fg, bg);
+				Vesa::write(" ");
+			});
+			Vesa::writeLine("");
+		}
 	};
 
 	bool registerCommand(char* cmd, CommandFunction func)
@@ -262,13 +287,28 @@ namespace Shell
 					FS::PathInfo pi;
 					if (FS::getPathInfo(&pi, argv[1]))
 					{
+						if (pi.isDirectory)
+						{
+							ls(argv[1]);
+							return 0;
+						}
+
 						size_t numberOfPages = 0;
 						void* fileBuf = MM::getPages(pi.size, &numberOfPages);
-						
-						if (FS::readFile(argv[1], fileBuf))
-							Vesa::writeLine(reinterpret_cast<char*>(fileBuf));
 
+						if (!FS::readFile(argv[1], fileBuf))
+						{
+							MM::freePages(fileBuf, numberOfPages);
+							return 1;
+						}
+
+						Vesa::writeLine(reinterpret_cast<char*>(fileBuf));
 						MM::freePages(fileBuf, numberOfPages);
+						return 0;
+					}
+					else
+					{
+						return 1;
 					}
 				}
 				else
@@ -289,29 +329,7 @@ namespace Shell
 			});
 
 			registerCommand("ls", [](char** argv, size_t argc) {
-				FS::readDir(cwd_, [](const char* name, const FS::PathInfo& pi) {
-					Vesa::Color fg;
-					Vesa::Color bg;
-
-					if (pi.isDirectory)
-					{
-						fg = Vesa::Color::YELLOW;
-						bg = Vesa::Color::BLACK;
-					}
-					else
-					{
-						fg = Vesa::Color::LIGHT_BLUE;
-						bg = Vesa::Color::BLACK;
-					}
-
-					const size_t l = strlen(const_cast<char*>(name));
-					const size_t off = 80 - (Vesa::getCursorOffset() % 80);
-					if (off < l)
-						Vesa::writeLine("");
-					Vesa::write(name, fg, bg);
-					Vesa::write(" ");
-				});
-				Vesa::writeLine("");
+				ls(cwd_);
 				return 0;
 			});
 
