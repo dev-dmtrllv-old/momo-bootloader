@@ -4,6 +4,7 @@
 
 #define PACKED __attribute__((packed))
 #define SECTION(symbol) __attribute__((section(symbol)))
+#define UNUSED __attribute__((unused))
 
 #ifndef INFO_COLOR
 #define INFO_COLOR Vesa::Color::CYAN

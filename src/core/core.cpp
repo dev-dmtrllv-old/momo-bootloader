@@ -6,16 +6,13 @@
 #include "core/disk.hpp"
 #include "core/fs.hpp"
 #include "core/shell.hpp"
+#include "core/list.hpp"
+#include "core/module.hpp"
+
 
 void main(uint16_t bootDriveNumber)
 {
-	Vesa::init();
 	Vesa::clear();
-
-	INFO("core entry");
-
-	INFO("initializing memory manager...");
-	MM::init();
 
 	INFO("initializing disk driver...");
 	Disk::init(bootDriveNumber);
@@ -25,6 +22,9 @@ void main(uint16_t bootDriveNumber)
 
 	INFO("initializing shell...");
 	Shell::init();
+
+	Module::initSystem();
+	Module::loadModule("ext2");
 
 	INFO("starting shell");
 	Shell::start();

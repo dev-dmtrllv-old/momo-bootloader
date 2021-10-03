@@ -1,6 +1,11 @@
 OUT_DIR = out
 INCL_DIR = include
 
+ASM_BOOT_SRCS = $(wildcard src/boot/*.asm)
+ASM_BOOT_INCL_DIR = src/boot/lib
+ASM_BOOT_INCL_FILES = $(wildcard $(ASM_BOOT_INCL_DIR)/*.asm)
+ASM_BOOT_OBJS = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(ASM_BOOT_SRCS))
+
 CPP_CORE_SRCS = $(wildcard src/core/*.cpp)
 ASM_CORE_SRCS = $(wildcard src/core/*.asm)
 CPP_CORE_HEADERS = $(wildcard include/core/*.hpp)
@@ -9,19 +14,19 @@ ASM_CORE_OBJS = $(patsubst src/core/%.asm,$(OUT_DIR)/core/%_asm.o,$(ASM_CORE_SRC
 CORE_BIOS_SRCS = $(wildcard src/core/bios/*.asm)
 CORE_BIOS_OBJS = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(CORE_BIOS_SRCS))
 
+MODULE_SRCS = $(wildcard src/modules/*.cpp)
+MODULE_HEADERS = $(wildcard include/modules/*.hpp)
+MODULE_OBJS = $(patsubst src/%.cpp,$(OUT_DIR)/%.mod,$(MODULE_SRCS))
+
 OPTIMIZATION = -O0
 
 TARGET = i686
 
 C_FLAGS = -ffreestanding $(OPTIMIZATION) -g -m32 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
+LD = $(TARGET)-elf-ld
 OBJCPY = $(TARGET)-elf-objcopy
 LD_FLAGS = -nostdlib -nolibc -nostartfiles -nodefaultlibs -fno-common -ffreestanding $(OPTIMIZATION)
-
-ASM_BOOT_SRCS = $(wildcard src/boot/*.asm)
-ASM_BOOT_INCL_DIR = src/boot/lib
-ASM_BOOT_INCL_FILES = $(wildcard $(ASM_BOOT_INCL_DIR)/*.asm)
-ASM_BOOT_OBJS = $(patsubst src/%.asm,$(OUT_DIR)/%.o,$(ASM_BOOT_SRCS))
 
 BOOT_OFFSET = 90
 
@@ -37,7 +42,7 @@ FS2_MOUNT_POINT = part2
 # END Mount options
 
 QEMU = qemu-system-i386
-QEMU_FLAGS = -M pc -no-reboot -m 512M -no-shutdown
+QEMU_FLAGS = -M pc -no-reboot -m 512M
 
 DISK_IMG = out/disk.img
 USB = /dev/sdb
@@ -47,10 +52,13 @@ all: $(ASM_BOOT_OBJS) out/core.bin $(DISK_IMG)
 disk:
 	make write-disk
 
+modules: $(MODULE_OBJS)
+
 $(ASM_BOOT_SRCS): $(ASM_BOOT_INCL_FILES)
 $(CPP_CORE_OBJS): $(CPP_CORE_SRCS) $(CPP_CORE_HEADERS)
 $(ASM_CORE_OBJS): $(ASM_CORE_SRCS) $(CPP_CORE_HEADERS)
 $(CORE_BIOS_OBJS): $(CORE_BIOS_SRCS) $(CPP_CORE_HEADERS)
+$(MODULE_OBJS): $(MODULE_SRCS) $(MODULE_HEADERS)
 
 out/boot/%.o: src/boot/%.asm $(ASM_BOOT_SRCS) $(ASM_BOOT_INCL_FILES)
 	@mkdir -p $(@D)
@@ -77,6 +85,12 @@ out/core/%.o: src/core/%.cpp $(CPP_CORE_HEADERS)
 	@mkdir -p $(@D)
 	$(CC) $(C_FLAGS) -c $< -o $@
 
+out/modules/%.mod: src/modules/%.cpp $(MODULE_HEADERS)
+	@mkdir -p $(@D)
+	$(CC) $(C_FLAGS) -fPIC -c $< -o $@.o
+	$(LD) -shared $@.o -o $@
+	rm -rf $@.o
+
 
 $(DISK_IMG):
 	@mkdir -p $(@D)
@@ -96,15 +110,17 @@ $(DISK_IMG):
 	sudo losetup -d $(LOOP_DEV2)
 
 
-write-disk: $(DISK_IMG) $(ASM_BOOT_OBJS) out/core.bin
+write-disk: $(DISK_IMG) $(ASM_BOOT_OBJS) modules out/core.bin
 	make mount
 	dd bs=1 if=out/boot/mbr.o of=$(DISK_IMG) conv=notrunc status=progress
 	sudo dd bs=1 if=out/boot/boot1.o count=3 of=$(LOOP_DEV1) conv=notrunc
 	sudo dd bs=1 skip=$(BOOT_OFFSET) if=out/boot/boot1.o iflag=skip_bytes of=$(LOOP_DEV1) seek=$(BOOT_OFFSET) conv=notrunc
 	sudo dd bs=1 seek=1024 if=out/boot/boot2.o iflag=skip_bytes of=$(LOOP_DEV1) conv=notrunc
-	sudo mkdir $(FS1_MOUNT_POINT)/momo || true
+	sudo mkdir -p $(FS1_MOUNT_POINT)/momo || true
+	sudo mkdir -p $(FS1_MOUNT_POINT)/momo/modules || true
 	sudo cp test-config.cfg $(FS1_MOUNT_POINT)/momo/boot.cfg
 	sudo cp out/core.bin $(FS1_MOUNT_POINT)/momo/core.bin
+	sudo cp out/modules/* $(FS1_MOUNT_POINT)/momo/modules/
 	make unmount
 
 
@@ -130,7 +146,7 @@ run: disk
 	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
 
 debug: disk
-	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S -no-shutdown
 
 clear:
 	make clean
@@ -144,7 +160,6 @@ clean:
 
 
 usb: $(ASM_BOOT_OBJS) out/core.bin
-# make write-disk
 	sudo umount $(USB) || true
 	sudo umount $(USB)1 || true
 	sudo umount $(USB)2 || true
@@ -163,9 +178,11 @@ usb: $(ASM_BOOT_OBJS) out/core.bin
 
 	mkdir temp || true
 	sudo mount /dev/sdb1 temp
-	sudo mkdir temp/momo || true
+	sudo mkdir -p temp/momo || true
+	sudo mkdir -p temp/momo/modules || true
 	sudo cp test-config.cfg temp/momo/boot.cfg
 	sudo cp out/core.bin temp/momo/core.bin
+	sudo cp out/modules/* temp/momo/modules/
 	sync
 	sudo umount temp
 	rmdir temp

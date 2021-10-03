@@ -155,7 +155,7 @@ char *utoa(unsigned int num, char *str, int base)
 	return str;
 }
 
-size_t strlen(char* str)
+size_t strlen(const char* str)
 {
 	size_t i = 0;
 	while(str[i] != '\0')
@@ -175,7 +175,7 @@ int strncmp(const char* str1, const char* str2, size_t length)
 	return *(reinterpret_cast<const unsigned char*>(str1)) - *(reinterpret_cast<const unsigned char*>(str2));
 }
 
-int strcmp(char* str1, char* str2)
+int strcmp(const char* str1, const char* str2)
 {
 	while(*str1)
 	{

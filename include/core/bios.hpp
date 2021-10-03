@@ -31,3 +31,4 @@ BIOS_ROUTINE(bios_set_cursor_position);
 BIOS_ROUTINE(bios_get_cursor_position);
 BIOS_ROUTINE(bios_get_mem_map);
 BIOS_ROUTINE(bios_get_keyboard_char);
+BIOS_ROUTINE(bios_shutdown);

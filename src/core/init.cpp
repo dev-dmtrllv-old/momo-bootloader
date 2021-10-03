@@ -1,5 +1,6 @@
-// #include "core/vga.hpp"
+#include "core/vesa.hpp"
 #include "core/macros.hpp"
+#include "core/mm.hpp"
 
 extern "C" void start () SECTION(".text.entry");
 
@@ -13,10 +14,18 @@ void start ()
 {
 	uint16_t bootDriveNumber = *reinterpret_cast<uint16_t*>(0x1000);
 
+	Vesa::init();
+
+	MM::init();
+
 	initGlobalCtors();
+
+	INFO("main entry");
 	main(bootDriveNumber);
-	// Vga::print("\n[core exit]\n");
+	INFO("main exit");
+
 	finiGlobalCtors();
-	// Vga::print("[halted]\n");
+
+	INFO("halted");
 	halt();
 }

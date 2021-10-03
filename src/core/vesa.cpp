@@ -152,6 +152,22 @@ namespace Vesa
 		setCursorPos(writeAt(str, cursorOffset_));
 	}
 
+	void write(uint32_t num)
+	{
+		if (!isInitialized_)
+			return;
+		
+		setCursorPos(writeAt(utoa(num, INT_STR_BUFFER, 10), cursorOffset_));
+	}
+
+	void write(int32_t num)
+	{
+		if (!isInitialized_)
+			return;
+		
+		setCursorPos(writeAt(itoa(num, INT_STR_BUFFER, 10), cursorOffset_));
+	}
+
 	void writeLine(const char* str)
 	{
 		if (!isInitialized_)
@@ -169,6 +185,16 @@ namespace Vesa
 		setCursorPos(off);
 	}
 
+	void writeLine(const uint32_t num)
+	{
+		writeLine(utoa(num, INT_STR_BUFFER, 10));
+	}
+
+	void writeLine(const int32_t num)
+	{
+		writeLine(itoa(num, INT_STR_BUFFER, 10));
+	}
+
 	uint16_t writeAt(const char* str, uint16_t offset)
 	{
 		if (!isInitialized_)
@@ -182,7 +208,7 @@ namespace Vesa
 			{
 				offset = ((offset / vgaColumns) + 1) * vgaColumns;
 				vgaMem = getVgaMemAddr(offset);
-				*str++;
+				str++;
 			}
 			else if (*str == '\t')
 			{
@@ -193,7 +219,7 @@ namespace Vesa
 					*vgaMem++ = ' ';
 					*vgaMem++ = colorAttr_;
 				}
-				*str++;
+				str++;
 				offset += spaces;
 			}
 			else
@@ -218,7 +244,6 @@ namespace Vesa
 	{
 		return writeAt(str, (row * vgaColumns) + column);
 	}
-
 
 	void write(const char* str, Color fg, Color bg)
 	{

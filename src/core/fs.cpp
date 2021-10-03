@@ -6,6 +6,7 @@
 #include "core/fat32.hpp"
 #include "core/disk.hpp"
 #include "core/ascii.hpp"
+#include "core/list.hpp"
 
 namespace FS
 {
@@ -15,6 +16,8 @@ namespace FS
 		FS::Driver* partitions_[4];
 
 		FS::Fat32 rootFs;
+		
+		List<Driver*> drivers_;
 	};
 
 	void init()
@@ -33,7 +36,7 @@ namespace FS
 		}
 	}
 
-	void loadDriver(size_t partitionIndex, FS::Driver* driver, size_t driverSize)
+	void loadDriver(size_t partitionIndex, FS::Driver* driver)
 	{
 		if (!isInitialized_)
 		{
@@ -104,5 +107,15 @@ namespace FS
 		}
 
 		return d->readDir(&path[2], callback);
+	}
+
+	void registerDriver(const FS::Driver* driver)
+	{
+
+	}
+
+	void unregisterDriver(const FS::Driver* driver)
+	{
+
 	}
 };

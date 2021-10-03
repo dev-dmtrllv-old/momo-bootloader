@@ -172,15 +172,43 @@ public:
 		size_t i = 0;
 		while (n != nullptr)
 		{
-			cb(&n->data, i++);
+			cb(n->data, i++);
 			n = n->next;
 		}
+	}
+
+	template<typename Callback>
+	bool has(Callback cb)
+	{
+		ListNode<T>* n = first_;
+		size_t i = 0;
+		while (n != nullptr)
+		{
+			if(cb(n->data, i++))
+				return true;
+			n = n->next;
+		}
+		return false;
+	}
+
+	template<typename Callback>
+	T* find(Callback cb)
+	{
+		ListNode<T>* n = first_;
+		size_t i = 0;
+		while (n != nullptr)
+		{
+			if(cb(n->data, i++))
+				return &n->data;
+			n = n->next;
+		}
+		return nullptr;
 	}
 
 	void remove(size_t index)
 	{
 		ListNode<T>* n = getNodeAt(index);
-		if(index - 1 > count_)
+		if (index - 1 > count_)
 		{
 			WARN("List: index out of bounds!");
 		}

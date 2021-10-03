@@ -80,10 +80,11 @@ namespace FS
 		uint32_t getNextCluster(uint32_t clusterNumber);
 
 	public:
-		Fat32() : FS::Driver(), dataLba_(0), rootDirLba_(0), fatLba_(0), clusterSize_(0), sectorSize_(0) {};
+		Fat32() : FS::Driver("FAT32"), dataLba_(0), rootDirLba_(0), fatLba_(0), clusterSize_(0), sectorSize_(0) {};
 
 		void init(uint32_t lba) override;
 
+		bool canDrive(uint32_t lba);
 		bool getPathInfo(FS::PathInfo* info, const char* path) override;
 		bool readFile(const char* path, void* dest) override;
 		void readDir(const char* path, void* dest, size_t maxItems) override;

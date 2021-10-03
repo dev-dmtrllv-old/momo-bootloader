@@ -71,6 +71,11 @@ namespace FS
 		MM::freePage(bpbBuffer);
 	}
 
+	bool Fat32::canDrive(uint32_t lba)
+	{
+		return false;
+	}
+
 
 	uint32_t Fat32::getNextCluster(uint32_t clusterNumber)
 	{
