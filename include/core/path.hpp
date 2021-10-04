@@ -3,15 +3,14 @@
 #include "core/types.hpp"
 #include "core/string.hpp"
 #include "core/macros.hpp"
+#include "core/ascii.hpp"
 
 namespace Path
 {
-	static const char* trim(const char* path, size_t* size)
+	static char* trim(char* path, size_t* size)
 	{
 		while (*path == '/')
 			path++;
-
-		// INFO(path);
 
 		if (path[0] == '\0')
 		{
@@ -22,9 +21,6 @@ namespace Path
 			size_t i = strlen(path) - 1;
 			while (path[i] == '/')
 				i--;
-
-			// char buf[17];
-			// ERROR(utoa(i, buf, 10));
 
 			*size = i + 1;
 		}
@@ -67,7 +63,7 @@ namespace Path
 			}
 
 			size_t bl = 0;
-			b = trim(b, &bl);
+			b = trim(const_cast<char*>(b), &bl);
 
 
 			if (strncmp(b, "..", 2) == 0)
@@ -89,7 +85,11 @@ namespace Path
 				}
 
 			}
-			else if(!(bl == 1 && b[0] == '.'))
+			else if (bl == 1 && b[0] == '.')
+			{
+				// INFO("same...")
+			}
+			else
 			{
 				size_t i = 0;
 				while (al < maxLen && i < bl)
@@ -109,4 +109,6 @@ namespace Path
 		if (resolve(maxLen, buf, p))
 			resolve(maxLen, buf, rest...);
 	};
+
+	bool isAbsolute(const char* path);
 };
