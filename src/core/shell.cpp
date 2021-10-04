@@ -7,6 +7,7 @@
 #include "core/ascii.hpp"
 #include "core/mm.hpp"
 #include "core/fs.hpp"
+#include "core/path.hpp"
 
 namespace Shell
 {
@@ -129,7 +130,7 @@ namespace Shell
 
 				terminateArgs(argBuf);
 
-				int exitCode = cmd->func(argv, argc);
+				int exitCode = cmd->func(cwd_, argv, argc);
 				if (exitCode != 0)
 				{
 					char* exitBuf = "Command exited with error code "INT_STR_BUFFER;
@@ -276,27 +277,41 @@ namespace Shell
 			memset(cwd_, 0, maxCwdCharacters);
 			memcpy(cwd_, "0:/", 3);
 
-			registerCommand("clear", [](char** argv, size_t argc) {
+			registerCommand("clear", [](const char* cwd, char** argv, size_t argc) {
 				Vesa::clear();
 				return 0;
 			});
 
-			registerCommand("echo", [](char** argv, size_t argc) {
+			registerCommand("echo", [](const char* cwd, char** argv, size_t argc) {
 				if ((argv[0][0] == '>' || argv[0][0] == '<') && argc >= 2)
 				{
+					char* path;
+					char absolutePath[128];
+					
+					if(Path::isAbsolute(argv[1]))
+					{
+						path = argv[1];
+					}
+					else
+					{
+						memset(absolutePath, 0, 128);
+						Path::resolve(128, reinterpret_cast<char*>(absolutePath), cwd, argv[1]);
+						path = absolutePath;
+					}
+
 					FS::PathInfo pi;
-					if (FS::getPathInfo(&pi, argv[1]))
+					if (FS::getPathInfo(&pi, path))
 					{
 						if (pi.isDirectory)
 						{
-							ls(argv[1]);
+							ls(path);
 							return 0;
 						}
 
 						size_t numberOfPages = 0;
 						void* fileBuf = MM::getPages(pi.size, &numberOfPages);
 
-						if (!FS::readFile(argv[1], fileBuf))
+						if (!FS::readFile(path, fileBuf))
 						{
 							MM::freePages(fileBuf, numberOfPages);
 							return 1;
@@ -323,12 +338,12 @@ namespace Shell
 				return 0;
 			});
 
-			registerCommand("cd", [](char** argv, size_t argc) {
+			registerCommand("cd", [](const char* cwd, char** argv, size_t argc) {
 				changeDir(argv[0]);
 				return 0;
 			});
 
-			registerCommand("ls", [](char** argv, size_t argc) {
+			registerCommand("ls", [](const char* cwd, char** argv, size_t argc) {
 				ls(cwd_);
 				return 0;
 			});
