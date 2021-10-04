@@ -73,6 +73,7 @@ namespace FS
 
 	bool Fat32::canDrive(uint32_t lba)
 	{
+		WARN("FAT32::canDrive not implemented!");
 		return false;
 	}
 

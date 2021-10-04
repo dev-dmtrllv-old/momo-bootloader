@@ -4,7 +4,7 @@
 
 namespace Shell
 {
-	typedef int(*CommandFunction)(char** args, size_t argc);
+	typedef int(*CommandFunction)(const char* cwd, char** args, size_t argc);
 
 	struct Command
 	{

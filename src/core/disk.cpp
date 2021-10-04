@@ -14,14 +14,6 @@ namespace Disk
 		bool isInitialized_ = false;
 		uint16_t driveNumber_ = 0x80;
 		Disk::PartitionTable partitionTable_;
-
-		PartitionTable* loadPartitionTable(PartitionTable* table)
-		{
-			void* buf = MM::getPage();
-			readSectors(buf, 0, 1);
-			memcpy(table, static_cast<void*>(buf + partitionTableOffset), sizeof(PartitionTable));
-			MM::freePage(buf);
-		}
 	};
 
 	void init(uint16_t driveNumber)
@@ -30,7 +22,10 @@ namespace Disk
 		{
 			driveNumber_ = driveNumber;
 
-			loadPartitionTable(&partitionTable_);
+			void* buf = MM::getPage();
+			readSectors(buf, 0, 1);
+			memcpy(&partitionTable_, static_cast<void*>(buf + partitionTableOffset), sizeof(PartitionTable));
+			MM::freePage(buf);
 
 			isInitialized_ = true;
 		}
@@ -43,6 +38,7 @@ namespace Disk
 	void readSectors(void* dest, uint32_t lba, uint16_t sectors)
 	{
 		void* buf = MM::allocRealModeBuffer(dapSectorSize);
+		memset(buf, 0, dapSectorSize);
 		uint32_t destAddr = reinterpret_cast<uint32_t>(dest);
 
 		Bios::Registers regs;
@@ -69,6 +65,6 @@ namespace Disk
 
 	const PartitionTable* const getPartitionTable()
 	{
-		return &partitionTable_;
+		return const_cast<const PartitionTable* const>(&partitionTable_);
 	}
 };

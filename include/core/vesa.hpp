@@ -56,7 +56,6 @@ namespace Vesa
 	void write(const char* str, Ts... rest)
 	{
 		Vesa::write(str);
-		Vesa::write(" ");
 		Vesa::write(rest...);
 	}
 

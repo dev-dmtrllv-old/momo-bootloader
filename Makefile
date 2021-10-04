@@ -88,7 +88,7 @@ out/core/%.o: src/core/%.cpp $(CPP_CORE_HEADERS)
 out/modules/%.mod: src/modules/%.cpp $(MODULE_HEADERS)
 	@mkdir -p $(@D)
 	$(CC) $(C_FLAGS) -fPIC -c $< -o $@.o
-	$(LD) -shared $@.o -o $@
+	$(LD) -r $@.o -o $@
 	rm -rf $@.o
 
 

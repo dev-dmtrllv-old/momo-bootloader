@@ -31,12 +31,12 @@ namespace Vesa
 
 		VgaMem getVgaMemAddr(uint32_t offset)
 		{
-			return reinterpret_cast<unsigned char*>(vgaMemAddrWithOffset(offset));
+			return reinterpret_cast<VgaMem>(vgaMemAddrWithOffset(offset));
 		}
 
 		VgaMem getVgaMemAddr(uint32_t row, uint32_t column)
 		{
-			return reinterpret_cast<unsigned char*>(vgaMemAddrWithOffset(row, column));
+			return reinterpret_cast<VgaMem>(vgaMemAddrWithOffset(row, column));
 		}
 
 		inline uint8_t combineColors(Color fg, Color bg)

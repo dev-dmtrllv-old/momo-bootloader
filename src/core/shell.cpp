@@ -8,6 +8,7 @@
 #include "core/mm.hpp"
 #include "core/fs.hpp"
 #include "core/path.hpp"
+#include "core/elf.hpp"
 
 namespace Shell
 {
@@ -148,73 +149,34 @@ namespace Shell
 
 		int changeDir(char* dir)
 		{
-			if (strcmp(dir, ".") == 0)
-				return 0;
+			char absolutePath[128];
+			memset(absolutePath, 0, 128);
+			Path::resolve(128, absolutePath, cwd_, dir);
 
-			FS::PathInfo pi;
 
-			const size_t l = strlen(cwd_);
-			char cpy[l];
-			memcpy(cpy, cwd_, l + 1);
-
-			char* cwdEnd = &cwd_[l];
-
-			if (strcmp(dir, "..") == 0)
+			if (strlen(absolutePath) == 2)
 			{
-				if (cwd_[l - 1] == '/') // we are already in the root dir
-				{
-					return 0;
-				}
-
-				size_t i = l;
-
-				while (i > 2)
-					if (cwd_[i--] == '/')
-						break;
-
-				if (i != 2)
-					cwd_[i] = '\0';
-				else
-					cwd_[i + 1] = '\0';
+				INFO("cd root");
+				memcpy(cwd_, absolutePath, strlen(absolutePath) + 1);
+				cwd_[2] = '/';
+				cwd_[3] = '\0';
 				return 0;
 			}
 			else
 			{
-				if (dir[0] != '/' && cwd_[l - 1] != '/')
-					*cwdEnd++ = '/';
+				FS::PathInfo pi;
 
-				memcpy(cwdEnd, dir, strlen(dir) + 1);
-
-				if (!FS::getPathInfo(&pi, cwd_))
-				{
-					Vesa::write("could not find ");
-					Vesa::write(cwd_);
-					Vesa::writeLine("!");
-
-					memcpy(cwd_, cpy, l + 1);
-
-					return 1;
-				}
-				else
+				if (FS::getPathInfo(&pi, absolutePath))
 				{
 					if (pi.isDirectory)
+					{
+						memcpy(cwd_, absolutePath, strlen(absolutePath) + 1);
 						return 0;
-
-					Vesa::write(cwd_);
-					Vesa::writeLine(" is not a directory!");
-
-					memcpy(cwd_, cpy, l + 1);
-
+					}
 					return 2;
 				}
+				return 1;
 			}
-
-			Vesa::write(cwd_);
-			Vesa::writeLine(" unknown error!");
-
-			memcpy(cwd_, cpy, l + 1);
-
-			return 3;
 		}
 
 		void ls(char* dir)
@@ -254,7 +216,7 @@ namespace Shell
 			{
 				if (commandList_[i].func == nullptr)
 				{
-					INFO("REGISTER CMD");
+					Vesa::writeLine("registered command ", cmd);
 					commandList_[i].cmd = cmd;
 					commandList_[i].func = func;
 					return true;
@@ -287,8 +249,8 @@ namespace Shell
 				{
 					char* path;
 					char absolutePath[128];
-					
-					if(Path::isAbsolute(argv[1]))
+
+					if (Path::isAbsolute(argv[1]))
 					{
 						path = argv[1];
 					}
@@ -339,13 +301,52 @@ namespace Shell
 			});
 
 			registerCommand("cd", [](const char* cwd, char** argv, size_t argc) {
-				changeDir(argv[0]);
-				return 0;
+				return changeDir(argv[0]);
 			});
 
 			registerCommand("ls", [](const char* cwd, char** argv, size_t argc) {
 				ls(cwd_);
 				return 0;
+			});
+
+			registerCommand("elf", [](const char* cwd, char** argv, size_t argc) {
+				char* path;
+				char absolutePath[128];
+
+				if (Path::isAbsolute(argv[0]))
+				{
+					path = argv[0];
+				}
+				else
+				{
+					memset(absolutePath, 0, 128);
+					Path::resolve(128, reinterpret_cast<char*>(absolutePath), cwd, argv[0]);
+					path = absolutePath;
+				}
+
+				FS::PathInfo pi;
+				if (FS::getPathInfo(&pi, path))
+				{
+					if (pi.isDirectory)
+						return 1;
+
+					size_t numberOfPages = 0;
+					void* fileBuf = MM::getPages(pi.size, &numberOfPages);
+
+					if (!FS::readFile(path, fileBuf))
+					{
+						MM::freePages(fileBuf, numberOfPages);
+						return 2;
+					}
+
+					Elf::info(fileBuf);
+					MM::freePages(fileBuf, numberOfPages);
+					return 0;
+				}
+				else
+				{
+					return 3;
+				}
 			});
 
 			isInitialized_ = true;

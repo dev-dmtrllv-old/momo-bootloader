@@ -1,5 +1,6 @@
 #include "core/module.hpp"
 #include "core/list.hpp"
+#include "core/elf.hpp"
 
 namespace Module
 {
@@ -35,11 +36,10 @@ namespace Module
 	{
 		if (isInitialized_)
 		{
-			Vesa::writeLine("loading module", name, "...");
+			Vesa::writeLine("loading module ", name, "...");
 			Module::Context* ctx = modules_.find([name](const Module::Context& ctx, const size_t i) { return strcmp(ctx.name, name) == 0; });
 			if (ctx == nullptr)
 			{
-				Vesa::writeLine("module not loaded yet");
 				const char* modulesPath = "0:/momo/modules/";
 				const size_t modulesPathLength = strlen(modulesPath);
 				const size_t nameLength = strlen(name);
@@ -63,11 +63,20 @@ namespace Module
 					}
 					else
 					{
-						// ctx = modules_.add();
 						size_t filePages = 0;
 						void* fileBuffer = MM::getPages(pi.size, &filePages);
 						FS::readFile(pathBuffer, fileBuffer);
 						Vesa::writeLine("module \"", pathBuffer, "\" loaded at ", utoa(reinterpret_cast<uint32_t>(fileBuffer), INT_STR_BUFFER, 16));
+						if(Elf::isValid(fileBuffer))
+						{
+							Vesa::writeLine("Elf header validated!");
+							Elf::info(fileBuffer);
+							Elf::load(fileBuffer, pi.size);
+						}
+						else
+						{
+							ERROR("INVALID ELF MODULE!");
+						}
 					}
 				}
 			}

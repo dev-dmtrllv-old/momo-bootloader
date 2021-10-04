@@ -40,7 +40,6 @@ private:
 
 	PageList<maxNodes, T>* getNewPageList()
 	{
-		INFO("get page");
 		PageList<maxNodes, T>* pl = reinterpret_cast<PageList<maxNodes, T>*>(MM::getPage());
 		memset(pl, 0, MM::pageSize);
 		pl->freeCount = maxNodes;
@@ -104,6 +103,11 @@ public:
 	{
 		pageList_ = getNewPageList();
 		lastPageList_ = pageList_;
+	}
+
+	~List()
+	{
+		MM::freePage(pageList_);
 	}
 
 	size_t size()

@@ -69,19 +69,19 @@ namespace Path
 			if (strncmp(b, "..", 2) == 0)
 			{
 				// INFO("back...")
-					size_t i = al - 2;
+				size_t i = al - 2;
 				while (i > 0)
 				{
 					if (a[i--] == '/')
 						break;
 				}
+				
 				if (i != 0)
 				{
 					if (a[i] == ':')
 						a[++i] = '/';
 
-					a[i] = '\0';
-
+					a[i + 1] = '\0';
 				}
 
 			}

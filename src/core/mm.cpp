@@ -198,6 +198,9 @@ namespace MM
 			addRealModeEntry(0x0, bufAddr, false);
 			addRealModeEntry(bufAddr, biosTopAddr - bufAddr, true);
 
+			INFO(utoa(bufAddr,INT_STR_BUFFER, 16));
+			INFO(utoa(biosTopAddr - bufAddr,INT_STR_BUFFER, 16));
+
 			isInitialized_ = true;
 		}
 		else
@@ -245,7 +248,7 @@ namespace MM
 									startIndex++;
 								}
 							}
-
+							memset(buf, 0, MM::pageSize * *numberOfPages);
 							return buf;
 						}
 
@@ -276,6 +279,7 @@ namespace MM
 					if (isBitmapFree(&bitmapPtr_[index], i))
 					{
 						setBitmap(&bitmapPtr_[index], i, false);
+						memset(reinterpret_cast<void*>(bitmapToAddr(index, i)), 0, MM::pageSize);
 						return reinterpret_cast<void*>(bitmapToAddr(index, i));
 					}
 				}
@@ -313,20 +317,15 @@ namespace MM
 			if (s == size)
 			{
 				realModeMemoryList_[index].isFree = false;
-
-				char buf[16];
-				utoa(b, buf, 16);
-				Vesa::write(buf);
-				Vesa::write(" : ");
-
-				utoa(s, buf, 16);
-				Vesa::writeLine(buf);
+				memset(reinterpret_cast<void*>(b), 0, size);
+				return reinterpret_cast<void*>(b);
 			}
 			else
 			{
 				// split the block
 				realModeMemoryList_[index].size -= size;
 				RealModeMemoryEntry* e = addRealModeEntry(b + realModeMemoryList_[index].size, size, false);
+				memset(reinterpret_cast<void*>(b), 0, size);
 				return reinterpret_cast<void*>(e->base);
 			}
 

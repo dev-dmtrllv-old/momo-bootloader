@@ -20,7 +20,7 @@ namespace FS
 		const char* name_;
 
 	public:
-		Driver(const char* name) : lba(0), name_(name) {};
+		Driver(const char* name) : name_(name), lba(0) {};
 
 		const char* name() { return name_; };
 

@@ -15,3 +15,6 @@ typedef uint32_t size_t;
 
 typedef unsigned long uintptr_t;
 typedef unsigned long ptr_t;
+
+template<typename T>
+bool matchEnum(T enumVal, uint32_t num) { return static_cast<uint32_t>(enumVal) == num; }
