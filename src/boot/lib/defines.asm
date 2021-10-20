@@ -1,11 +1,15 @@
 %define MBR_ADDR						0x7A00
 %define BOOT1_ADDR						0x7C00
 %define BOOT2_ADDR						0x1000
+<<<<<<< HEAD:src/boot/lib/defines.asm
 
 %define BOOT_INFO_ADDR					0x1000
 
 %define CORE_LOAD_ADDR					0x2000
 %define CORE_ENTRY_ADDR					0x10000
+=======
+%define CORE_ADDR						0x2000
+>>>>>>> main:src/lib/defines.asm
 
 %define PT_TABLE 						(MBR_ADDR + 0x1BE)
 %define PT_ENTRY_SIZE					0x10
