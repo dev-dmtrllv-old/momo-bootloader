@@ -14,8 +14,7 @@ print:
 
 print_line:
 	call print
-	mov si, msg_EOL
-	call print
+	call print_nl
 	ret
 
 clear_screen:
@@ -24,6 +23,11 @@ clear_screen:
 	mov al, 0x03			; text mode 80x25 16 colours
 	int 0x10
 	popa
+	ret
+
+print_nl:
+	mov si, msg_EOL
+	call print
 	ret
 
 ; data

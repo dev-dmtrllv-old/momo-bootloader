@@ -4,11 +4,30 @@
 
 namespace MM
 {
-	void init(void *memMap, uint32_t size);
-	void *reserve(uint32_t minAddr, uint32_t maxaDDR, uint32_t size);
-	void *alloc(uint32_t size);
-	void free(void *addr);
+	constexpr uint32_t pageSize = 0x1000;
 
-	template <typename T>
-	T *alloc(uint32_t size) { return reinterpret_cast<T *>(alloc(size)); };
+	void init();
+
+	template<typename T>
+	constexpr T align(T n, size_t alignment = pageSize)
+	{
+		if (n % alignment == 0)
+			return n;
+		return ((n / alignment) + 1) * alignment;
+	}
+
+	template<typename T>
+	constexpr T alignDown(T n, size_t alignment = pageSize)
+	{
+		if (n % alignment == 0)
+			return n;
+		return (n / alignment) * alignment;
+	}
+
+	void* getPage();
+	void* getPages(size_t bytes, size_t* numberOfPages);
+	void freePage(void* address);
+	void freePages(void* address, size_t numberOfPages);
+	void* allocRealModeBuffer(size_t size);
+	void freeRealModeBuffer(void* buffer);
 };

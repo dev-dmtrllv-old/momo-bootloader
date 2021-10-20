@@ -1,13 +1,30 @@
-OUTPUT_FORMAT("binary")
+OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386)
 ENTRY(start)
 SECTIONS
+<<<<<<< HEAD
+{	
+	. = 0x2000;
+	
+
+	__biosBinaryStart = .;
+
+	.bios :
+	{
+		*(.bios)	
+	}
+	
+	__biosBinaryEnd = .;
+
+	. = 0x10000;
+=======
 {
 	. = 0x2000;
+>>>>>>> main
 
 	__coreBinaryStart = .;
 
-	.text :
+	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text.entry)
 		*(.text.startup)
@@ -18,15 +35,15 @@ SECTIONS
 		*(.text .stub .text.* .gnu.linkonce.t.*)
 		*(.text)
 	}
-	
-	.preinit_array    :
+
+	.preinit_array BLOCK(4K) : ALIGN(4K)
 	{
 	  	PROVIDE_HIDDEN (__preinit_array_start = .);
 	  	KEEP (*(.preinit_array))
 	  	PROVIDE_HIDDEN (__preinit_array_end = .);
 	}
 	
-	.init_array    :
+	.init_array BLOCK(4K) : ALIGN(4K)
 	{
 		PROVIDE_HIDDEN (__init_array_start = .);
 		KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
@@ -34,7 +51,7 @@ SECTIONS
 		PROVIDE_HIDDEN (__init_array_end = .);
 	}
 	
-	.fini_array    :
+	.fini_array BLOCK(4K) : ALIGN(4K)
 	{
 		PROVIDE_HIDDEN (__fini_array_start = .);
 		KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
@@ -42,7 +59,7 @@ SECTIONS
 		PROVIDE_HIDDEN (__fini_array_end = .);
 	}
 	
-	.ctors :
+	.ctors BLOCK(4K) : ALIGN(4K)
 	{
 		KEEP (*crtbegin.o(.ctors))
 		KEEP (*crtbegin?.o(.ctors))
@@ -51,14 +68,14 @@ SECTIONS
 		KEEP (*(.ctors))
 	}
 	
-	.dtors :
+	.dtors BLOCK(4K) : ALIGN(4K)
 	{
 	  	KEEP (*crtbegin.o(.dtors))
 	  	KEEP (*crtbegin?.o(.dtors))
 	  	KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .dtors))
 	  	KEEP (*(SORT(.dtors.*)))
 	  	KEEP (*(.dtors))
-	}	
+	}
 	
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
@@ -79,16 +96,18 @@ SECTIONS
 		*(.bss);
 		*(.gnu.linkonce.b*);
 		ebss = .;
-	}	
+	}
+	
 	.ctors : {
 		__ctors_beg = .;
 		*(.ctors)
 		__ctors_end = .;
 	}	
+	
 	/DISCARD/ : 
 	{
 		*(.comment)
-		*(.eh_frame) /* discard this, unless you are implementing runtime support for C++ exceptions. */
+		*(.eh_frame)
 	}	
 	__coreBinaryEnd = .;
 

@@ -19,7 +19,7 @@ namespace IO
 		__asm__ volatile(
 			"outb %0, %1"
 			:
-			: "a"(data), "Nd"(port));
+		: "a"(data), "Nd"(port));
 	}
 
 	inline uint16_t inw(uint16_t port)
@@ -37,7 +37,7 @@ namespace IO
 		__asm__ volatile(
 			"outw %0, %1"
 			:
-			: "a"(data), "Nd"(port));
+		: "a"(data), "Nd"(port));
 	}
 
 	inline uint32_t inl(uint16_t port)
@@ -55,6 +55,6 @@ namespace IO
 		__asm__ volatile(
 			"outl %0, %1"
 			:
-			: "a"(data), "Nd"(port));
+		: "a"(data), "Nd"(port));
 	}
 };
