@@ -1,3 +1,5 @@
+DOCKER_IMG_NAME = momo-bootloader
+
 OUT_DIR = out
 INCL_DIR = include
 
@@ -190,3 +192,10 @@ usb: $(ASM_BOOT_OBJS) out/core.bin
 test-usb: usb
 	sleep 1
 	sudo $(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(USB)
+
+build-docker:
+	docker build -t $(DOCKER_IMG_NAME):latest .
+
+run-docker:
+	xhost +
+	docker run --privileged=true --rm -it --net=host --ipc=host -e DISPLAY=$$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix --volume="$$HOME/.Xauthority:/root/.Xauthority:rw" --volume="$$(pwd):/$():rw" $(DOCKER_IMG_NAME):latest
