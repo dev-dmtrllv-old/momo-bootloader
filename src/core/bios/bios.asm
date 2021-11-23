@@ -18,6 +18,8 @@ call_bios_routine:
 	mov ecx, 12
 	rep movsb
 
+	lidt [idt_real_mode]
+
 	jmp word 0x18:pm_16
 
 [bits 16]
@@ -109,6 +111,10 @@ bios_routine_done:
 	ret
 
 align 4
+
+idt_real_mode:
+   dw 0x3ff			; 256 entries, 4b each = 1K
+   dd 0				; Real Mode IVT @ 0x0000
 
 sp_ptr:				dd 0x0
 bp_ptr:				dd 0x0

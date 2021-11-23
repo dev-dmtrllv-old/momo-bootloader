@@ -51,7 +51,7 @@ namespace Vesa
 			Bios::Registers regs = {};
 			regs.dx = Bios::combineReg(column, row);
 			regs.bx = 0;
-			call_bios_routine(&bios_set_cursor_position, &regs);
+			Bios::call(&bios_set_cursor_position, &regs);
 		}
 
 		void setCursorPos(uint16_t offset)
@@ -83,7 +83,7 @@ namespace Vesa
 		if (!isInitialized_)
 		{
 			Bios::Registers regs = {};
-			call_bios_routine(&bios_get_cursor_position, &regs);
+			Bios::call(&bios_get_cursor_position, &regs);
 
 			uint8_t row = Bios::higherReg(regs.dx);
 			uint8_t col = Bios::lowerReg(regs.dx);

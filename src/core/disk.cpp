@@ -52,7 +52,7 @@ namespace Disk
 			regs.di = 0;
 			regs.si = reinterpret_cast<uint32_t>(buf);
 
-			call_bios_routine(&bios_read_sectors, &regs);
+			Bios::call(&bios_read_sectors, &regs);
 
 			memcpy(reinterpret_cast<void*>(destAddr), buf, dapSectorSize);
 

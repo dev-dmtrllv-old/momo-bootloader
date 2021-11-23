@@ -146,7 +146,7 @@ namespace MM
 			Bios::Registers regs = {};
 			regs.di = bufAddr;
 
-			call_bios_routine(&bios_get_mem_map, &regs);
+			Bios::call(&bios_get_mem_map, &regs);
 
 			const uint32_t minBitMapAddr = align(CoreInfo::getBinaryEndAddr());
 
