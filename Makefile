@@ -20,7 +20,7 @@ MODULE_SRCS = $(wildcard src/modules/*.cpp)
 MODULE_HEADERS = $(wildcard include/modules/*.hpp)
 MODULE_OBJS = $(patsubst src/%.cpp,$(OUT_DIR)/%.mod,$(MODULE_SRCS))
 
-OPTIMIZATION = -O0
+OPTIMIZATION = -O4
 
 TARGET = i686
 
