@@ -7,6 +7,7 @@ namespace Vesa
 	namespace
 	{
 		typedef unsigned char* volatile VgaMem;
+		typedef unsigned char* VgaMemPtr;
 
 		constexpr uint32_t vgaMemAddr = 0xB8000;
 		constexpr uint32_t vgaRows = 25;
@@ -29,14 +30,14 @@ namespace Vesa
 		Color background_;
 
 
-		VgaMem getVgaMemAddr(uint32_t offset)
+		VgaMemPtr getVgaMemAddr(uint32_t offset)
 		{
-			return reinterpret_cast<VgaMem>(vgaMemAddrWithOffset(offset));
+			return reinterpret_cast<VgaMemPtr>(vgaMemAddrWithOffset(offset));
 		}
 
-		VgaMem getVgaMemAddr(uint32_t row, uint32_t column)
+		VgaMemPtr getVgaMemAddr(uint32_t row, uint32_t column)
 		{
-			return reinterpret_cast<VgaMem>(vgaMemAddrWithOffset(row, column));
+			return reinterpret_cast<VgaMemPtr>(vgaMemAddrWithOffset(row, column));
 		}
 
 		inline uint8_t combineColors(Color fg, Color bg)
@@ -70,7 +71,10 @@ namespace Vesa
 			VgaMem vgaMem = getVgaMemAddr(vgaRows - 1, 0);
 
 			for (size_t i = 0; i < vgaColumns; i++)
+			{
 				vgaMem[i * 2] = ' ';
+				vgaMem[(i * 2) + 1] = colorAttr_;
+			}
 		}
 	};
 
@@ -156,16 +160,16 @@ namespace Vesa
 	{
 		if (!isInitialized_)
 			return;
-		
-		setCursorPos(writeAt(utoa(num, INT_STR_BUFFER, 10), cursorOffset_));
+		INT_STR_BUFFER_ARR;
+		setCursorPos(writeAt(utoa(num, buf, 10), cursorOffset_));
 	}
 
 	void write(int32_t num)
 	{
 		if (!isInitialized_)
 			return;
-		
-		setCursorPos(writeAt(itoa(num, INT_STR_BUFFER, 10), cursorOffset_));
+		INT_STR_BUFFER_ARR;
+		setCursorPos(writeAt(itoa(num, buf, 10), cursorOffset_));
 	}
 
 	void writeLine(const char* str)
@@ -187,12 +191,14 @@ namespace Vesa
 
 	void writeLine(const uint32_t num)
 	{
-		writeLine(utoa(num, INT_STR_BUFFER, 10));
+		INT_STR_BUFFER_ARR;
+		writeLine(utoa(num, buf, 10));
 	}
 
 	void writeLine(const int32_t num)
 	{
-		writeLine(itoa(num, INT_STR_BUFFER, 10));
+		INT_STR_BUFFER_ARR;
+		writeLine(itoa(num, buf, 10));
 	}
 
 	uint16_t writeAt(const char* str, uint16_t offset)

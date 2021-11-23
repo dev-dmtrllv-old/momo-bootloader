@@ -59,15 +59,16 @@ namespace Module
 				{
 					if (pi.isDirectory)
 					{
-
+						ERROR("INVALID ELF MODULE!");
 					}
 					else
 					{
+						INT_STR_BUFFER_ARR;
 						size_t filePages = 0;
 						void* fileBuffer = MM::getPages(pi.size, &filePages);
 						FS::readFile(pathBuffer, fileBuffer);
-						Vesa::writeLine("module \"", pathBuffer, "\" loaded at ", utoa(reinterpret_cast<uint32_t>(fileBuffer), INT_STR_BUFFER, 16));
-						if(Elf::isValid(fileBuffer))
+						Vesa::writeLine("module \"", pathBuffer, "\" loaded at ", utoa(reinterpret_cast<uint32_t>(fileBuffer), buf, 16));
+						if (Elf::isValid(fileBuffer))
 						{
 							Vesa::writeLine("Elf header validated!");
 							Elf::info(fileBuffer);
@@ -77,35 +78,38 @@ namespace Module
 						{
 							ERROR("INVALID ELF MODULE!");
 						}
+						MM::freePages(fileBuffer, filePages);
 					}
 				}
 			}
+			return ctx;
 		}
 		else
 		{
 			ERROR("Module system is not initialized yet!");
 		}
+		return nullptr;
 	}
 
 	void unloadModule(const char* name)
 	{
-		if(isInitialized_)
+		if (isInitialized_)
 		{
 			size_t index = 0;
 
-		Module::Context* ctx = modules_.find([&](const Module::Context& ctx, const size_t i) {
-			if (strcmp(ctx.name, name) == 0) {
-				index = i;
-				return true;
-			}
-			return false;
-		});
+			Module::Context* ctx = modules_.find([&](const Module::Context& ctx, const size_t i) {
+				if (strcmp(ctx.name, name) == 0) {
+					index = i;
+					return true;
+				}
+				return false;
+			});
 
-		if (ctx != nullptr)
-		{
-			modules_.remove(index);
-			ctx->unload(unloadCtx_);
-		}
+			if (ctx != nullptr)
+			{
+				modules_.remove(index);
+				ctx->unload(unloadCtx_);
+			}
 		}
 		else
 		{

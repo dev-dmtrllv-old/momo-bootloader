@@ -115,12 +115,12 @@ namespace Elf
 			STT_FUNC = 2  // Methods or functions
 		};
 
-		typedef struct Rel {
+		struct Rel {
 			uint32_t r_offset;
 			uint32_t r_info;
 		} PACKED;
 
-		typedef struct RelA {
+		struct RelA {
 			uint32_t offset;
 			uint32_t info;
 			int32_t	addend;
@@ -244,32 +244,19 @@ namespace Elf
 
 	void info(void* elfPtr)
 	{
+		INT_STR_BUFFER_ARR;
 		Header* h = reinterpret_cast<Header*>(elfPtr);
-		Vesa::writeLine("elf info for file at:", utoa(reinterpret_cast<uint32_t>(elfPtr), INT_STR_BUFFER, 16));
-		char buf[4];
-		buf[3] = 0;
-		memcpy(buf, &h->ident[1], 3);
-		Vesa::writeLine("type: ", utoa(static_cast<uint32_t>(h->type), INT_STR_BUFFER, 10));
-		Vesa::writeLine("machine: ", utoa(static_cast<uint32_t>(h->machine), INT_STR_BUFFER, 10));
-		Vesa::writeLine("version: ", utoa(h->version, INT_STR_BUFFER, 10));
-		Vesa::writeLine("entry: ", utoa(h->entry, INT_STR_BUFFER, 16));
-		Vesa::writeLine("section header offset: ", utoa(h->shoff, INT_STR_BUFFER, 16));
-		Vesa::writeLine("section header entries: ", utoa(h->shnum, INT_STR_BUFFER, 16));
-		Vesa::writeLine("section header entry size: ", utoa(h->shentsize, INT_STR_BUFFER, 16));
-		// Vesa::writeLine("sections: ");
-
-		// List<const char*> sections;
-
-		// for (size_t i = 0; i < h->shnum; i++)
-		// {
-		// 	SectionHeader* sh = getSection(h, i);
-		// 	const char* s = getString(h, sh->name);
-		// 	if (strncmp(s, ".data", 5) == 0 || strncmp(s, ".rel", 4) == 0 || strncmp(s, ".text", 5) == 0)
-		// 		if (!sections.has([&](const char* str, size_t i) { return strcmp(s, str) == 0; }))
-		// 			sections.add(s);
-		// }
-
-		// sections.forEach([&](const char* str, size_t i) { Vesa::writeLine(str); });
+		Vesa::writeLine("elf info for file at:", utoa(reinterpret_cast<uint32_t>(elfPtr), buf, 16));
+		char typeBuf[4];
+		typeBuf[3] = 0;
+		memcpy(typeBuf, &h->ident[1], 3);
+		Vesa::writeLine("type: ", utoa(static_cast<uint32_t>(h->type), buf, 10));
+		Vesa::writeLine("machine: ", utoa(static_cast<uint32_t>(h->machine), buf, 10));
+		Vesa::writeLine("version: ", utoa(h->version, buf, 10));
+		Vesa::writeLine("entry: ", utoa(h->entry, buf, 16));
+		Vesa::writeLine("section header offset: ", utoa(h->shoff, buf, 16));
+		Vesa::writeLine("section header entries: ", utoa(h->shnum, buf, 16));
+		Vesa::writeLine("section header entry size: ", utoa(h->shentsize, buf, 16));
 	}
 
 	bool isValid(void* elfPtr)

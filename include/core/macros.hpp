@@ -26,3 +26,4 @@ Vesa::writeLine(msg);
 Vesa::writeLine(msg);
 
 #define INT_STR_BUFFER "\0\0\0\0\0\0\0\0\0\0"
+#define INT_STR_BUFFER_ARR char buf[11] = {};

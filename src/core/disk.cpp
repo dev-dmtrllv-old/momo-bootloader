@@ -24,7 +24,7 @@ namespace Disk
 
 			void* buf = MM::getPage();
 			readSectors(buf, 0, 1);
-			memcpy(&partitionTable_, static_cast<void*>(buf + partitionTableOffset), sizeof(PartitionTable));
+			memcpy(&partitionTable_, reinterpret_cast<void*>(reinterpret_cast<uint32_t>(buf) + partitionTableOffset), sizeof(PartitionTable));
 			MM::freePage(buf);
 
 			isInitialized_ = true;
@@ -63,8 +63,8 @@ namespace Disk
 		MM::freeRealModeBuffer(buf);
 	}
 
-	const PartitionTable* const getPartitionTable()
+	PartitionTable* getPartitionTable()
 	{
-		return const_cast<const PartitionTable* const>(&partitionTable_);
+		return &partitionTable_;
 	}
 };

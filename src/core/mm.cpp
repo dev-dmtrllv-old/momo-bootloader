@@ -181,7 +181,7 @@ namespace MM
 					if (b >= minBitMapAddr)
 					{
 						const uint32_t t = align(biosMemBuf[i].base + biosMemBuf[i].size);
-						for (b; b < t; b += pageSize)
+						for (; b < t; b += pageSize)
 							setBitmapAtAddr(b, false);
 					}
 				}
@@ -198,8 +198,10 @@ namespace MM
 			addRealModeEntry(0x0, bufAddr, false);
 			addRealModeEntry(bufAddr, biosTopAddr - bufAddr, true);
 
-			INFO(utoa(bufAddr,INT_STR_BUFFER, 16));
-			INFO(utoa(biosTopAddr - bufAddr,INT_STR_BUFFER, 16));
+			INT_STR_BUFFER_ARR;
+
+			INFO(utoa(bufAddr, buf, 16));
+			INFO(utoa(biosTopAddr - bufAddr, buf, 16));
 
 			isInitialized_ = true;
 		}
@@ -296,7 +298,7 @@ namespace MM
 	void freePages(void* address, size_t pages)
 	{
 		for (size_t i = 0; i < pages; i++)
-			setBitmapAtAddr(reinterpret_cast<uint32_t>(address + (i * MM::pageSize)), true);
+			setBitmapAtAddr(reinterpret_cast<uint32_t>(address) + (i * MM::pageSize), true);
 	}
 
 	void* allocRealModeBuffer(size_t size)

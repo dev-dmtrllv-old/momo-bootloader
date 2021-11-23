@@ -9,6 +9,7 @@
 #include "core/fs.hpp"
 #include "core/path.hpp"
 #include "core/elf.hpp"
+#include "core/module.hpp"
 
 namespace Shell
 {
@@ -23,7 +24,7 @@ namespace Shell
 		Command* commandList_;
 		char cwd_[maxCwdCharacters];
 
-		Command* findCommand(char* cmd)
+		Command* findCommand(const char* cmd)
 		{
 			for (size_t i = 0; i < maxCommands; i++)
 			{
@@ -134,9 +135,12 @@ namespace Shell
 				int exitCode = cmd->func(cwd_, argv, argc);
 				if (exitCode != 0)
 				{
-					char* exitBuf = "Command exited with error code "INT_STR_BUFFER;
-					itoa(exitCode, &exitBuf[31], 10);
-					ERROR(exitBuf);
+					INT_STR_BUFFER_ARR;
+					itoa(exitCode, buf, 10);
+					char exitStr[50] = {};
+					memcpy(exitStr, "Command exited with error code ", 31);
+					memcpy(&exitStr[31], buf, strlen(buf));
+					ERROR(exitStr);
 				}
 			}
 			else
@@ -152,7 +156,6 @@ namespace Shell
 			char absolutePath[128];
 			memset(absolutePath, 0, 128);
 			Path::resolve(128, absolutePath, cwd_, dir);
-
 
 			if (strlen(absolutePath) == 2)
 			{
@@ -207,7 +210,7 @@ namespace Shell
 		}
 	};
 
-	bool registerCommand(char* cmd, CommandFunction func)
+	bool registerCommand(const char* cmd, CommandFunction func)
 	{
 		Command* foundCmd = findCommand(cmd);
 		if (foundCmd == nullptr)
@@ -340,6 +343,7 @@ namespace Shell
 					}
 
 					Elf::info(fileBuf);
+
 					MM::freePages(fileBuf, numberOfPages);
 					return 0;
 				}
@@ -347,6 +351,15 @@ namespace Shell
 				{
 					return 3;
 				}
+			});
+
+			registerCommand("loadmod", [](const char* cwd, char** argv, size_t argc) {
+				Module::Context* ctx = Module::loadModule(argv[0]);
+				
+				if(ctx == nullptr)
+					return 1;
+
+				return 0;
 			});
 
 			isInitialized_ = true;

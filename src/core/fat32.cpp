@@ -50,16 +50,18 @@ namespace FS
 
 		void* bpbBuffer = MM::getPage();
 
+		uint32_t bpbBufferAddr = reinterpret_cast<uint32_t>(bpbBuffer);
+
 		Disk::readSectors(bpbBuffer, lba, 1);
 
 		BPBInfo bpbInfo;
 
-		bpbInfo.bytesPerSector = *reinterpret_cast<uint16_t*>(bpbBuffer + BPBOffsets::bytesPerSector);
-		bpbInfo.sectorsPerCluster = *reinterpret_cast<uint8_t*>(bpbBuffer + BPBOffsets::sectorsPerCluster);
-		bpbInfo.reservedSectors = *reinterpret_cast<uint16_t*>(bpbBuffer + BPBOffsets::reservedSectors);
-		bpbInfo.numberOfFats = *reinterpret_cast<uint8_t*>(bpbBuffer + BPBOffsets::numberOfFats);
-		bpbInfo.sectorsPerFat = *reinterpret_cast<uint32_t*>(bpbBuffer + BPBOffsets::sectorsPerFat);
-		bpbInfo.rootDirCluster = *reinterpret_cast<uint32_t*>(bpbBuffer + BPBOffsets::rootDirCluster);
+		bpbInfo.bytesPerSector = *reinterpret_cast<uint16_t*>(bpbBufferAddr + BPBOffsets::bytesPerSector);
+		bpbInfo.sectorsPerCluster = *reinterpret_cast<uint8_t*>(bpbBufferAddr + BPBOffsets::sectorsPerCluster);
+		bpbInfo.reservedSectors = *reinterpret_cast<uint16_t*>(bpbBufferAddr + BPBOffsets::reservedSectors);
+		bpbInfo.numberOfFats = *reinterpret_cast<uint8_t*>(bpbBufferAddr + BPBOffsets::numberOfFats);
+		bpbInfo.sectorsPerFat = *reinterpret_cast<uint32_t*>(bpbBufferAddr + BPBOffsets::sectorsPerFat);
+		bpbInfo.rootDirCluster = *reinterpret_cast<uint32_t*>(bpbBufferAddr + BPBOffsets::rootDirCluster);
 
 		this->sectorSize_ = bpbInfo.bytesPerSector;
 		this->clusterSize_ = bpbInfo.sectorsPerCluster;
@@ -145,7 +147,7 @@ namespace FS
 			// Vesa::write(" : ");
 			// Vesa::writeLine(utoa(reinterpret_cast<uint32_t>(dest + (i * Disk::dapSectorSize)), b, 16));
 			// WARN();
-			Disk::readSectors(dest + (i * Disk::dapSectorSize), lba + i, 1);
+			Disk::readSectors(reinterpret_cast<void*>(reinterpret_cast<uint32_t>(dest) + (i * Disk::dapSectorSize)), lba + i, 1);
 		}
 		return dest;
 	}
@@ -165,7 +167,7 @@ namespace FS
 
 				for (size_t i = 0; i < this->rootDirEntries_; i++)
 				{
-					RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(entries + (i * 32));
+					RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(reinterpret_cast<uint32_t>(entries) + (i * 32));
 
 					if (strncmp(entry->name, str, 11) == 0)
 					{
@@ -302,7 +304,7 @@ namespace FS
 
 				for (size_t i = 0; i < this->rootDirEntries_; i++)
 				{
-					RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(buf + (i * 32));
+					RootDirEntry* entry = reinterpret_cast<RootDirEntry*>(reinterpret_cast<uint32_t>(buf) + (i * 32));
 
 					if (entry->attributes != Attribute::NONE && entry->attributes != Attribute::LONG_FILENAME)
 					{

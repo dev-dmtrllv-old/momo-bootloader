@@ -40,7 +40,7 @@ namespace Ascii
 		{
 			if (*str >= 97 && *str <= 122)
 				*str = *str - 32;
-			*str++;
+			str++;
 		}
 	}
 
@@ -50,7 +50,7 @@ namespace Ascii
 		{
 			if (*str >= 65 && *str <= 90)
 				*str = *str + 32;
-			*str++;
+			str++;
 		}
 	}
 };

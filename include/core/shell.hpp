@@ -8,7 +8,7 @@ namespace Shell
 
 	struct Command
 	{
-		char* cmd;
+		const char* cmd;
 		CommandFunction func;
 	} PACKED;
 
@@ -16,5 +16,5 @@ namespace Shell
 	void start();
 	void stop();
 
-	bool registerCommand(char* cmd, CommandFunction func);
+	bool registerCommand(const char* cmd, CommandFunction func);
 };

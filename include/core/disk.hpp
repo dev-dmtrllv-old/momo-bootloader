@@ -28,5 +28,5 @@ namespace Disk
 
 	void init(uint16_t driveNumber);
 	void readSectors(void* dest, uint32_t lba, uint16_t sectors);
-	const PartitionTable* const getPartitionTable();
+	PartitionTable* getPartitionTable();
 };
