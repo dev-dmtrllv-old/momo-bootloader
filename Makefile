@@ -24,7 +24,9 @@ OPTIMIZATION = -O0
 
 TARGET = i686
 
-C_FLAGS = -ffreestanding $(OPTIMIZATION) -g -m32 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common -I$(INCL_DIR)
+DISABLED_CC_WARNINGS = unknown-pragmas unused-function unused-variable unused-result unused-parameter
+
+C_FLAGS = -ffreestanding $(OPTIMIZATION) -g -m32 -Wall -Wextra -fno-use-cxa-atexit -fno-exceptions -fno-rtti -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -fno-common $(patsubst %,-Wno-%,$(DISABLED_CC_WARNINGS)) -I$(INCL_DIR)
 CC = $(TARGET)-elf-g++
 LD = $(TARGET)-elf-ld
 OBJCPY = $(TARGET)-elf-objcopy
@@ -145,7 +147,7 @@ unmount:
 
 
 run: disk
-	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) 
+	$(QEMU) $(QEMU_FLAGS) -serial stdio -drive format=raw,file=$(DISK_IMG)
 
 debug: disk
 	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S -no-shutdown
@@ -192,10 +194,3 @@ usb: $(ASM_BOOT_OBJS) out/core.bin
 test-usb: usb
 	sleep 1
 	sudo $(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(USB)
-
-build-docker:
-	docker build -t $(DOCKER_IMG_NAME):latest .
-
-run-docker:
-	xhost +
-	docker run --privileged=true --rm -it --net=host --ipc=host -e DISPLAY=$$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix --volume="$$HOME/.Xauthority:/root/.Xauthority:rw" --volume="$$(pwd):/$():rw" $(DOCKER_IMG_NAME):latest
