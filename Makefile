@@ -20,7 +20,7 @@ MODULE_SRCS = $(wildcard src/modules/*.cpp)
 MODULE_HEADERS = $(wildcard include/modules/*.hpp)
 MODULE_OBJS = $(patsubst src/%.cpp,$(OUT_DIR)/%.mod,$(MODULE_SRCS))
 
-OPTIMIZATION = -O4
+OPTIMIZATION = -O0
 
 TARGET = i686
 
@@ -150,7 +150,7 @@ run: disk
 	$(QEMU) $(QEMU_FLAGS) -serial stdio -drive format=raw,file=$(DISK_IMG)
 
 debug: disk
-	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S -no-shutdown
+	$(QEMU) $(QEMU_FLAGS) -drive format=raw,file=$(DISK_IMG) -s -S -no-shutdown -no-reboot
 
 clear:
 	make clean

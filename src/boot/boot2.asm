@@ -397,7 +397,7 @@ gdt_base:
         dd 0x0
         dd 0x0
          
-    .code32:
+    .code32: ; offset 0x0
         dw 0xFFFF
         dw 0x0
         db 0x00
@@ -405,7 +405,7 @@ gdt_base:
         db 0xCF
         db 0x00
          
-    .data32:
+    .data32: ; offset 0x8
         dw 0xFFFF
         dw 0x0
         db 0x0
@@ -413,7 +413,7 @@ gdt_base:
         db 0xCF
         db 0x0
          
-    .code16:
+    .code16: ; offset 0x10
         dw 0xFFFF
         dw 0x0
         db 0x0
@@ -421,7 +421,7 @@ gdt_base:
         db 0x0F
         db 0x0
          
-    .data16:
+    .data16: ; offset 0x18
         dw 0xFFFF
         dw 0x0
         db 0x0
