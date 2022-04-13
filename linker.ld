@@ -2,11 +2,9 @@ OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386)
 ENTRY(start)
 SECTIONS
-<<<<<<< HEAD
 {	
 	. = 0x2000;
 	
-
 	__biosBinaryStart = .;
 
 	.bios :
@@ -17,10 +15,6 @@ SECTIONS
 	__biosBinaryEnd = .;
 
 	. = 0x10000;
-=======
-{
-	. = 0x2000;
->>>>>>> main
 
 	__coreBinaryStart = .;
 
